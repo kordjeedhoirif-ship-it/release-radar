@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0a0a0d"><title>Release Radar — Les sorties musicales</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0d;--panel:#141419;--panel2:#1c1c23;--line:#26262f;--muted:#9a99a8;--text:#f5f4fb;--red:#e8213a;--red2:#ff3d55;--gold:#ffc23d}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;overflow-x:hidden}
+a{color:inherit}button{font:inherit}
+.wrap{max-width:1280px;margin:auto;padding:0 28px}
+/* NAV */
+.nav{position:fixed;inset:0 0 auto;z-index:50;transition:background .3s}.nav.solid{background:#0a0a0dee;backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex;align-items:center;gap:28px;height:66px}
+.brand{font:700 19px 'Space Grotesk',sans-serif;letter-spacing:-.6px;white-space:nowrap;text-decoration:none}.brand b{color:var(--red2)}
+.menu{display:flex;gap:22px;font-size:13px}.menu a{text-decoration:none;color:#cfcfd8}.menu a:hover{color:#fff}
+.nsearch{margin-left:auto;position:relative}.nsearch input{width:260px;background:#ffffff12;border:1px solid #ffffff20;border-radius:30px;color:#fff;padding:9px 14px 9px 34px;outline:none;font:inherit;font-size:13px;transition:width .3s}
+.nsearch input:focus{width:320px;border-color:var(--red)}.nsearch svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.6}
+/* HERO */
+.hero{position:relative;height:min(78vh,640px);min-height:480px;overflow:hidden}
+.hbg{position:absolute;inset:-40px;background-size:cover;background-position:center;filter:blur(38px) saturate(1.3) brightness(.55);transform:scale(1.1);transition:background-image .6s}
+.hero:after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#0a0a0d 0%,#0a0a0dcc 35%,#0a0a0d33 70%),linear-gradient(0deg,var(--bg) 0%,transparent 35%)}
+.hin{position:relative;z-index:2;height:100%;display:flex;align-items:center;gap:40px;padding-top:40px}
+.htxt{flex:1;max-width:600px;animation:fade .6s}
+@keyframes fade{from{opacity:0;transform:translateY(12px)}}
+.hbadge{display:inline-flex;gap:8px;align-items:center;font-size:11px;letter-spacing:1.6px;font-weight:700;color:var(--red2)}
+.hbadge i{width:7px;height:7px;border-radius:50%;background:var(--red2);box-shadow:0 0 12px var(--red2)}
+.hero h1{font:700 clamp(34px,5.4vw,64px)/1.02 'Space Grotesk',sans-serif;letter-spacing:-2px;margin:14px 0 10px}
+.hartist{font-size:18px;color:#e5e4ee;margin-bottom:12px}
+.hmeta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}.pill{border:1px solid #ffffff30;border-radius:20px;padding:4px 11px;font-size:11px;color:#ddd;background:#00000040}
+.hbtns{display:flex;gap:10px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;border-radius:30px;padding:12px 22px;font-size:13px;font-weight:700;text-decoration:none;border:0;cursor:pointer}
+.btn.red{background:var(--red);color:#fff;box-shadow:0 8px 24px #e8213a55}.btn.red:hover{background:var(--red2)}
+.btn.ghost{background:#ffffff14;color:#fff;border:1px solid #ffffff30}.btn.ghost:hover{background:#ffffff24}.btn.ghost.on{border-color:var(--red2);color:var(--red2)}
+.hcover{width:min(36vw,380px);aspect-ratio:1;border-radius:16px;overflow:hidden;box-shadow:0 30px 80px #000c;position:relative;flex:none;animation:fade .6s}
+.hcover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.hdots{position:absolute;z-index:3;bottom:34px;left:50%;transform:translateX(-50%);display:flex;gap:7px}
+.hdots button{width:26px;height:4px;border-radius:3px;border:0;background:#ffffff40;cursor:pointer;padding:0}.hdots button.on{background:var(--red2);width:40px}
+/* SECTIONS */
+section.blk{margin:34px 0}
+.shead{display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap}
+.shead h2{font:600 22px 'Space Grotesk',sans-serif;margin:0;display:flex;align-items:center;gap:10px}.shead h2 svg{color:var(--red2)}
+.shead .sub{color:var(--muted);font-size:12px}
+.shead .right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.pills{display:flex;gap:8px;flex-wrap:wrap}
+.gp{background:var(--panel2);border:1px solid var(--line);color:#ccc;border-radius:30px;padding:7px 15px;font-size:12px;cursor:pointer}
+.gp:hover{color:#fff;border-color:#3a3a46}.gp.active{background:var(--red);border-color:var(--red);color:#fff;font-weight:700}
+.arrow{width:34px;height:34px;border-radius:50%;background:var(--panel2);border:1px solid var(--line);color:#fff;cursor:pointer;display:grid;place-items:center}.arrow:hover{border-color:var(--red)}
+/* ROW (carousel) */
+.row{display:grid;grid-auto-flow:column;grid-auto-columns:calc((100% - 6*14px)/7);gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:4px 0 8px}
+.row::-webkit-scrollbar{display:none}.row.isempty{display:block}.row>*{scroll-snap-align:start}
+/* POSTER */
+.poster{position:relative;min-width:0;cursor:pointer}
+.pimg{aspect-ratio:1;border-radius:10px;overflow:hidden;position:relative;background:var(--panel2);transition:transform .25s,box-shadow .25s}
+.poster:hover .pimg{transform:translateY(-4px);box-shadow:0 14px 30px #000a,0 0 0 2px var(--red)}
+.pimg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ph{position:absolute;inset:0;display:grid;place-items:center;font:700 30px 'Space Grotesk',sans-serif;color:#ffffff55}
+.badge{position:absolute;top:8px;left:8px;background:#000000b0;border-radius:6px;padding:3px 7px;font-size:9px;font-weight:700;letter-spacing:.6px;z-index:1}
+.badge.red{left:auto;right:8px;background:var(--red)}
+.fav{position:absolute;bottom:8px;right:8px;z-index:2;width:30px;height:30px;border-radius:50%;border:0;background:#000000a0;color:#fff;cursor:pointer;opacity:0;transition:opacity .2s;font-size:14px}
+.poster:hover .fav,.fav.on{opacity:1}.fav.on{color:var(--red2)}
+.ov{position:absolute;inset:0;background:linear-gradient(0deg,#000000e0,transparent 60%);opacity:0;transition:opacity .25s;display:flex;align-items:flex-end;padding:10px;gap:6px;z-index:1}
+.poster:hover .ov{opacity:1}.ov a{background:#ffffff1c;border:1px solid #ffffff30;border-radius:6px;padding:5px 7px;font-size:10px;text-decoration:none}.ov a:hover{background:var(--red);border-color:var(--red)}
+.pt{font-weight:600;font-size:13px;margin:9px 0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pa{color:var(--muted);font-size:11px;display:flex;justify-content:space-between;gap:6px}.pa span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pa .d{color:var(--gold);flex:none}
+/* GRID */
+.ctrls{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px}
+select{background:var(--panel2);border:1px solid var(--line);border-radius:30px;color:#ddd;padding:8px 14px;outline:none;font:inherit;font-size:12px;cursor:pointer}select:focus{border-color:var(--red)}
+.grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:22px 14px}
+.empty{grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);border:1px dashed var(--line);border-radius:14px}
+.skel{border-radius:10px;aspect-ratio:.8;background:linear-gradient(90deg,#141419,#1f1f27,#141419);background-size:200% 100%;animation:sh 1.2s infinite}@keyframes sh{to{background-position:-200% 0}}
+.more{display:block;margin:24px auto 0;background:var(--panel2);border:1px solid var(--line);color:#eee;border-radius:30px;padding:11px 24px;cursor:pointer;font-size:13px}.more:hover{border-color:var(--red)}
+/* SPOTLIGHT */
+.spot{position:relative;border-radius:18px;overflow:hidden;min-height:330px;display:flex;align-items:flex-end;border:1px solid var(--line)}
+.spot .hbg{inset:-30px}.spot:after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#0a0a0df0 10%,#0a0a0d55 60%,#0a0a0d22)}
+.spin{position:relative;z-index:2;display:flex;gap:28px;align-items:center;padding:34px;width:100%}
+.spin .hcover{width:200px}
+.spin h3{font:700 clamp(24px,3.4vw,40px)/1.05 'Space Grotesk',sans-serif;margin:8px 0;letter-spacing:-1px}
+.count{display:flex;gap:10px;margin:16px 0 20px}.count div{background:#00000060;border:1px solid #ffffff25;border-radius:10px;padding:8px 12px;text-align:center;min-width:58px}
+.count b{display:block;font:700 22px 'Space Grotesk',sans-serif}.count small{font-size:9px;color:var(--muted);letter-spacing:1px}
+/* CALENDAR */
+.calendar{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:17px}
+.calhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.calhead strong{font:600 16px 'Space Grotesk',sans-serif;text-transform:capitalize}
+.calnav{display:flex;gap:7px}.calnav button{background:var(--panel2);border:1px solid var(--line);color:white;border-radius:8px;min-width:33px;height:32px;cursor:pointer;padding:0 10px;font-size:12px}
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}.dayname{text-align:center;color:var(--muted);font-size:10px;padding:5px}
+.day{background:var(--panel2);border:1px solid transparent;border-radius:8px;min-height:50px;padding:7px;color:#eee;text-align:left;cursor:pointer;font-size:13px;position:relative}
+.day.dim{opacity:.2;cursor:default}.day.today{border-color:var(--red)}.day.selected{background:var(--red);color:#fff;font-weight:700}
+.day .n{position:absolute;right:6px;bottom:5px;font-size:9px;background:var(--gold);color:#111;border-radius:10px;padding:1px 5px;font-weight:700}
+/* STATUS / BANNER / FOOT */
+.status{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.src{display:inline-flex;align-items:center;gap:7px;background:var(--panel);border:1px solid var(--line);border-radius:30px;padding:5px 11px;font-size:10px;color:#ccc}
+.src i{width:7px;height:7px;border-radius:50%;background:#666}.src.ok i{background:#4ade80}.src.err i{background:var(--red2)}.src.load i{background:var(--gold);animation:pulse 1s infinite}@keyframes pulse{50%{opacity:.3}}
+.refresh{background:none;border:1px solid var(--line);color:#ccc;border-radius:30px;padding:5px 11px;font-size:10px;cursor:pointer}.refresh:hover{border-color:var(--red);color:#fff}
+.banner{display:none;background:#2a1010;border:1px solid #6b1e26;color:#ffc9cf;border-radius:12px;padding:12px 15px;font-size:12px;margin:18px 0 0;line-height:1.6}
+.foot{border-top:1px solid var(--line);margin-top:50px;padding:22px 0 50px;color:var(--muted);font-size:11px;line-height:1.7}.foot b{color:#eee}
+@media(max-width:1100px){.row{grid-auto-columns:calc((100% - 4*14px)/5)}.grid{grid-template-columns:repeat(5,minmax(0,1fr))}.menu{display:none}}
+@media(max-width:800px){.row{grid-auto-columns:calc((100% - 2*12px)/3.2)}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.hcover{display:none}.nsearch input,.nsearch input:focus{width:170px}.spin .hcover{display:none}}
+@media(max-width:520px){.wrap{padding:0 15px}.row{grid-auto-columns:42%}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hero{min-height:440px}.brand{font-size:16px}.nsearch input,.nsearch input:focus{width:130px}.day{min-height:40px;padding:5px}.spin{padding:22px}.ov{opacity:1;background:none;padding:6px}.ov a{display:none}}
+</style></head><body>
+<nav class="nav" id="nav"><div class="wrap">
+  <a class="brand" href="#top">RELEASE<b>RADAR</b></a>
+  <div class="menu"><a href="#trends">Tendances</a><a href="#sorties">Sorties</a><a href="#bientot">À venir</a><a href="#calendrier">Calendrier</a><a href="#maliste">Ma liste</a></div>
+  <label class="nsearch"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="search" placeholder="Artiste, album…" autocomplete="off"></label>
+</div></nav>
+
+<header class="hero" id="top"><div class="hbg" id="hbg"></div><div class="wrap hin" id="hero"></div><div class="hdots" id="hdots"></div></header>
+
+<main class="wrap">
+  <div class="status" id="status"></div><div class="banner" id="banner"></div>
+
+  <section class="blk" id="trends">
+    <div class="shead"><h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m3 17 6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Tendances</h2>
+      <div class="pills" id="tpills"></div>
+      <div class="right"><button class="arrow" data-scroll="trow" data-dir="-1" aria-label="Précédent">‹</button><button class="arrow" data-scroll="trow" data-dir="1" aria-label="Suivant">›</button></div></div>
+    <div class="row" id="trow"></div>
+  </section>
+
+  <section class="blk" id="sorties">
+    <div class="shead"><h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/></svg><span id="listTitle">Toutes les sorties</span></h2><span class="sub" id="count"></span></div>
+    <div class="pills" id="genres" style="margin-bottom:12px"></div>
+    <div class="ctrls">
+      <select id="period"><option value="all">Toutes les dates</option><option value="week">7 derniers jours</option><option value="month">Ce mois-ci</option><option value="upcoming">À venir</option></select>
+      <select id="kind"><option value="all">Tous formats</option><option value="Album">Albums</option><option value="EP">EP</option><option value="Single">Singles</option></select>
+      <select id="region"><option value="all">Monde entier</option><option value="FR">France</option><option value="US">USA</option><option value="GB">UK</option><option value="AF">Afrique</option></select>
+      <select id="sort"><option value="new">Plus récentes</option><option value="old">Plus anciennes</option><option value="az">A → Z</option></select>
+    </div>
+    <div class="grid" id="albums"></div><button class="more" id="more" hidden>Afficher plus</button>
+  </section>
+
+  <section class="blk" id="spotlight"></section>
+
+  <section class="blk" id="bientot">
+    <div class="shead"><h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Prochainement</h2><span class="sub">Annoncées dans les 90 prochains jours</span>
+      <div class="right"><button class="arrow" data-scroll="urow" data-dir="-1" aria-label="Précédent">‹</button><button class="arrow" data-scroll="urow" data-dir="1" aria-label="Suivant">›</button></div></div>
+    <div class="row" id="urow"></div>
+  </section>
+
+  <section class="blk" id="calendrier">
+    <div class="shead"><h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Calendrier des sorties</h2><span class="sub">Clique sur un jour pour voir ses sorties</span></div>
+    <div class="calendar"><div class="calhead"><strong id="monthLabel"></strong><div class="calnav"><button id="prev" aria-label="Mois précédent">‹</button><button id="todayBtn">Aujourd'hui</button><button id="next" aria-label="Mois suivant">›</button></div></div><div class="days" id="calendar"></div></div>
+  </section>
+
+  <section class="blk" id="maliste">
+    <div class="shead"><h2><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7-4.4-9.3-9C1.2 8.8 3.3 5 7 5c2 0 3.4 1.1 5 3 1.6-1.9 3-3 5-3 3.7 0 5.8 3.8 4.3 7-2.3 4.6-9.3 9-9.3 9z"/></svg>Ma liste</h2><span class="sub">Les projets que tu as gardés (sur cet appareil)</span></div>
+    <div class="row" id="frow"></div>
+  </section>
+
+  <footer class="foot"><b>À propos des données</b><br>Nouveautés : sélection éditoriale Deezer par genre. Classements par pays et recherche : Apple Music / iTunes. Sorties à venir et calendrier : MusicBrainz (base collaborative), pochettes Cover Art Archive. Les dates futures sont celles annoncées publiquement et peuvent changer. Données mises en cache 6 h dans ton navigateur.</footer>
+</main>
+<script>
+
+/* =====================================================================
+   CONFIG
+   ===================================================================== */
+const GENRES=[ // id Deezer de la sélection éditoriale + mots-clés pour reconnaître le genre ailleurs
+  {key:'Tous',label:'Tout',deezer:0},
+  {key:'Afro',label:'Afro',deezer:2,match:/afro|african|africa|amapiano|highlife|coupé|ndombolo|zouk/i},
+  {key:'R&B',label:'R&B',deezer:165,match:/r&b|rnb|soul/i},
+  {key:'Rap',label:'Rap',deezer:116,match:/rap|hip.?hop|drill|trap/i},
+  {key:'Pop',label:'Pop',deezer:132,match:/pop/i},
+  {key:'Latino',label:'Latino',deezer:197,match:/latin|reggaeton|urbano/i},
+];
+const REGIONS={FR:{apple:['fr'],mb:['FR']},US:{apple:['us'],mb:['US']},GB:{apple:['gb'],mb:['GB']},AF:{apple:['ng','za'],mb:['NG','ZA','GH','CI','SN','CM','KE']}};
+const CACHE_TTL=6*3600*1000, PAGE=24;
+
+/* =====================================================================
+   OUTILS
+   ===================================================================== */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const TODAY=iso(new Date());
+const addDays=(s,n)=>{const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return iso(d)};
+const dateLabel=d=>{if(!d)return 'Date inconnue';if(d.length===4)return d;if(d.length===7)return new Date(d+'-15T12:00:00').toLocaleDateString('fr-FR',{month:'short',year:'numeric'});return new Date(d+'T12:00:00').toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'})};
+const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\(.*?\)|\[.*?\]|- ?(deluxe|edition|remaster).*$/g,'').replace(/[^a-z0-9]/g,'');
+const initials=s=>String(s||'?').split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
+const kindOf=t=>{t=String(t||'').toLowerCase();if(t.includes('single'))return 'Single';if(t==='ep'||t.endsWith(' ep')||t.includes('- ep'))return 'EP';return 'Album'};
+const genreFrom=txt=>{for(const g of GENRES)if(g.match&&g.match.test(txt||''))return g.key;return null};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+const cache={get(k){try{const v=JSON.parse(localStorage.getItem('rr:'+k));if(v&&Date.now()-v.t<CACHE_TTL)return v.d}catch(e){}return null},
+  set(k,d){try{localStorage.setItem('rr:'+k,JSON.stringify({t:Date.now(),d}))}catch(e){}},
+  clear(){try{Object.keys(localStorage).filter(k=>k.startsWith('rr:')).forEach(k=>localStorage.removeItem(k))}catch(e){}}};
+
+// JSONP : Deezer et iTunes n'envoient pas d'en-têtes CORS, mais acceptent un paramètre callback.
+let jsonpN=0;
+function jsonp(url,timeout=12000){return new Promise((res,rej)=>{const cb='__rr'+(jsonpN++)+'_'+Date.now();const s=document.createElement('script');
+  const done=()=>{delete window[cb];s.remove();clearTimeout(t)};const t=setTimeout(()=>{done();rej(new Error('timeout'))},timeout);
+  window[cb]=d=>{done();res(d)};s.onerror=()=>{done();rej(new Error('network'))};s.src=url+(url.includes('?')?'&':'?')+(url.includes('deezer')?'output=jsonp&':'')+'callback='+cb;document.head.appendChild(s)})}
+async function getJSON(url,timeout=12000){const c=new AbortController();const t=setTimeout(()=>c.abort(),timeout);try{const r=await fetch(url,{signal:c.signal,headers:{Accept:'application/json'}});if(!r.ok)throw new Error('HTTP '+r.status);return await r.json()}finally{clearTimeout(t)}}
+// MusicBrainz impose ~1 requête/seconde : file d'attente
+let mbQueue=Promise.resolve();
+function mbFetch(url){const p=mbQueue.then(()=>getJSON(url,15000));mbQueue=p.catch(()=>{}).then(()=>sleep(1100));return p}
+
+/* =====================================================================
+   SOURCES  →  format commun {id,title,artist,genre,date,kind,cover,url,source,region}
+   ===================================================================== */
+const Sources={
+  async deezer(g){ // sélection éditoriale « nouveautés » de Deezer pour un genre
+    const k='dz'+g.deezer;let d=cache.get(k);
+    if(!d){const r=await jsonp('https://api.deezer.com/editorial/'+g.deezer+'/releases?limit=100');if(r.error)throw new Error(r.error.message);
+      d=(r.data||[]).map(a=>({id:'dz'+a.id,title:a.title,artist:a.artist?.name,genre:g.deezer?g.key:null,date:a.release_date,kind:kindOf(a.record_type),cover:a.cover_big||a.cover_medium,url:a.link||('https://www.deezer.com/album/'+a.id),source:'Deezer',region:null}));cache.set(k,d)}
+    return d},
+  async appleTop(cc,regionKey){ // albums les plus écoutés du pays (Apple Music RSS)
+    const k='ap'+cc;let d=cache.get(k);
+    if(!d){const r=await getJSON('https://rss.applemarketingtools.com/api/v2/'+cc+'/music/most-played/50/albums.json');
+      d=(r.feed?.results||[]).map(a=>({id:'ap'+a.id,title:a.name,artist:a.artistName,genre:genreFrom((a.genres||[]).map(x=>x.name).join(' ')),date:(a.releaseDate||'').slice(0,10),kind:'Album',cover:(a.artworkUrl100||'').replace(/\d+x\d+bb/,'500x500bb'),url:a.url,source:'Apple Music',region:regionKey}));cache.set(k,d)}
+    return d},
+  async itunesSearch(q,cc='fr'){ // recherche dans tout le catalogue
+    const r=await jsonp('https://itunes.apple.com/search?entity=album&limit=40&country='+cc+'&term='+encodeURIComponent(q));
+    return (r.results||[]).map(a=>({id:'it'+a.collectionId,title:a.collectionName,artist:a.artistName,genre:genreFrom(a.primaryGenreName),date:(a.releaseDate||'').slice(0,10),kind:kindOf(a.collectionName+' '+(a.trackCount<=3?'single':a.trackCount<=7?'ep':'')),cover:(a.artworkUrl100||'').replace(/\d+x\d+bb/,'500x500bb'),url:a.collectionViewUrl,source:'iTunes',region:null}))},
+  async musicbrainz(from,to,countries){ // sorties officielles datées (passées ou futures)
+    const k='mb'+from+to+(countries||[]).join();let d=cache.get(k);
+    if(!d){let q='date:['+from+' TO '+to+'] AND status:official AND (primarytype:album OR primarytype:ep)';
+      if(countries&&countries.length)q+=' AND ('+countries.map(c=>'country:'+c).join(' OR ')+')';
+      const r=await mbFetch('https://musicbrainz.org/ws/2/release?fmt=json&limit=100&query='+encodeURIComponent(q));
+      const seen=new Set();d=[];
+      for(const a of r.releases||[]){const rg=a['release-group']||{};if(seen.has(rg.id))continue;seen.add(rg.id);
+        if((rg['secondary-types']||[]).some(t=>/compilation|live|soundtrack|spokenword|audiobook|interview/i.test(t)))continue;
+        const artist=(a['artist-credit']||[]).map(c=>(c.name||c.artist?.name)+(c.joinphrase||'')).join('');
+        if(/various artists/i.test(artist))continue;
+        const reg=Object.keys(REGIONS).find(R=>REGIONS[R].mb.includes(a.country))||null;
+        d.push({id:'mb'+rg.id,title:a.title,artist,genre:genreFrom((a.tags||[]).map(t=>t.name).join(' ')),date:a.date,kind:kindOf(rg['primary-type']),cover:'https://coverartarchive.org/release/'+a.id+'/front-250',url:'https://musicbrainz.org/release/'+a.id,source:'MusicBrainz',region:reg,noCoverOk:true})}
+      cache.set(k,d)}
+    return d},
+};
+
+/* =====================================================================
+   ÉTAT + CHARGEMENT
+   ===================================================================== */
+let demoMode=false,staticMode=false;const MIN_DATE=addDays(TODAY,-180); // on ne garde que les 6 derniers mois
+const store=new Map(); // clé normalisée artiste+titre → album
+let genre='Tous',selected=null,cursor=new Date();cursor.setDate(1);let shown=PAGE,searchResults=null,searchSeq=0;
+const status={};const loadedMonths=new Set();const loadedRegions=new Set();
+
+function add(list){for(const a of list){if(!a||!a.title||!a.date||a.date<MIN_DATE)continue;const k=norm(a.artist)+'|'+norm(a.title);const old=store.get(k);
+  if(!old){store.set(k,a);continue}
+  // fusion : on garde la meilleure info de chaque source
+  if(!old.genre&&a.genre)old.genre=a.genre;if(!old.region&&a.region)old.region=a.region;
+  if(old.noCoverOk&&!a.noCoverOk){old.cover=a.cover;old.noCoverOk=false;old.url=a.url;old.source=a.source}
+  if(a.date&&a.date.length>(old.date||'').length)old.date=a.date}}
+
+function setStatus(name,state,info){status[name]={state,info};$('status').innerHTML=Object.entries(status).map(([n,s])=>'<span class="src '+s.state+'" title="'+esc(s.info||'')+'"><i></i>'+esc(n)+(s.info&&s.state!=='load'?' · '+esc(s.info):'')+'</span>').join('')+'<button class="refresh" id="refresh">↻ Actualiser</button>';
+  $('refresh').onclick=()=>{demoMode=false;staticMode=false;cache.clear();store.clear();loadedMonths.clear();loadedRegions.clear();boot()}}
+
+async function run(name,fn){setStatus(name,'load');try{const r=await fn();setStatus(name,'ok',r+' sorties');return true}catch(e){console.warn(name,e);setStatus(name,'err','indisponible');return false}}
+
+async function loadMonth(d){const y=d.getFullYear(),m=d.getMonth();const key=y+'-'+pad(m+1);if(loadedMonths.has(key))return;loadedMonths.add(key);
+  const from=key+'-01',to=key+'-'+pad(new Date(y,m+1,0).getDate());
+  try{add(await Sources.musicbrainz(from,to));redraw()}catch(e){loadedMonths.delete(key)}}
+
+async function loadRegion(R){if(R==='all'||staticMode||loadedRegions.has(R))return;loadedRegions.add(R);const cfg=REGIONS[R];
+  await run('Apple Music '+$('region').selectedOptions[0].text,async()=>{let n=0;for(const cc of cfg.apple){const l=await Sources.appleTop(cc,R);add(l);n+=l.length}redraw();return n});
+  try{add(await Sources.musicbrainz(TODAY,addDays(TODAY,90),cfg.mb));add(await Sources.musicbrainz(addDays(TODAY,-60),TODAY,cfg.mb));redraw()}catch(e){}}
+
+// Base générée automatiquement par le robot GitHub (scripts/update.mjs), lue en priorité
+async function loadStatic(){const r=await fetch('data/releases.json?v='+Math.floor(Date.now()/36e5),{cache:'no-cache'});if(!r.ok)throw new Error('HTTP '+r.status);
+  const d=await r.json();if(!d.items||!d.items.length)throw new Error('vide');return d}
+const ago=t=>{const h=Math.round((Date.now()-new Date(t))/36e5);return h<1?'à l’instant':h<48?'il y a '+h+' h':'il y a '+Math.round(h/24)+' j'};
+
+async function boot(){
+  $('albums').innerHTML=Array(12).fill('<div class="skel"></div>').join('');$('trow').innerHTML=Array(7).fill('<div class="skel"></div>').join('');$('banner').style.display='none';
+  // 1) base du site (mise à jour par le robot, plusieurs fois par jour)
+  try{setStatus('Base Release Radar','load');const d=await loadStatic();add(d.items);staticMode=true;
+    for(let i=-2;i<=4;i++){const c=new Date();c.setDate(1);c.setMonth(c.getMonth()+i);loadedMonths.add(c.getFullYear()+'-'+pad(c.getMonth()+1))}
+    setStatus('Base Release Radar','ok',d.items.length+' sorties · mise à jour '+ago(d.updated));redraw();return}
+  catch(e){delete status['Base Release Radar'];console.info('Pas de base locale, passage en direct',e.message)}
+  // 2) sinon : connexion directe aux sources depuis le navigateur
+  const dz=run('Deezer',async()=>{const res=await Promise.allSettled(GENRES.map(g=>Sources.deezer(g)));
+    res.slice(1).concat(res.slice(0,1)).forEach(r=>r.status==='fulfilled'&&add(r.value));
+    const n=res.filter(r=>r.status==='fulfilled').reduce((s,r)=>s+r.value.length,0);if(!n)throw new Error('vide');redraw();return n});
+  const mb=run('MusicBrainz',async()=>{const l=await Sources.musicbrainz(TODAY,addDays(TODAY,90));add(l);loadedMonths.add(TODAY.slice(0,7));redraw();return l.length});
+  await Promise.all([dz,mb]);
+  if(!store.size){$('banner').style.display='block';$('banner').innerHTML='⚠️ <b>Aucune source musicale n’a répondu.</b> La page est sans doute ouverte dans un aperçu (comme celui de Claude) qui bloque Internet, ou un bloqueur de publicité bloque Deezer.<br>Solution durable : mets le site en ligne sur GitHub Pages avec le robot de mise à jour (voir le fichier LISEZMOI.md).';
+    $('albums').innerHTML='<div class="empty">Aucune sortie chargée pour l’instant.</div>';$('trow').innerHTML='<div class="empty">Aucune sortie chargée.</div>'}
+  if($('region').value!=='all')loadRegion($('region').value);
+  redraw()}
+
+/* =====================================================================
+   AFFICHAGE — interface façon streaming
+   ===================================================================== */
+function filtered(base){const q=norm($('search').value),period=$('period').value,kind=$('kind').value,region=$('region').value;
+  const monthKey=TODAY.slice(0,7),weekAgo=addDays(TODAY,-7);
+  return base.filter(a=>(genre==='Tous'||a.genre===genre)
+    &&(!q||q.length<3||searchResults||norm(a.title+' '+a.artist).includes(q))
+    &&(kind==='all'||a.kind===kind)
+    &&(region==='all'||searchResults||a.region===region)
+    &&(!selected||a.date===selected)
+    &&(period==='all'||(period==='upcoming'&&a.date>TODAY)||(period==='month'&&a.date.startsWith(monthKey))||(period==='week'&&a.date>=weekAgo&&a.date<=TODAY)))}
+let trendGenre='Tous',heroIdx=0,heroTimer=null,heroList=[];
+const favs=(()=>{try{return JSON.parse(localStorage.getItem('rr:favs'))||{}}catch(e){return {}}})();
+const saveFavs=()=>{try{localStorage.setItem('rr:favs',JSON.stringify(favs))}catch(e){}};
+const hue=s=>{let h=0;for(const c of String(s))h=(h*31+c.charCodeAt(0))%360;return h};
+const phBg=a=>'background:linear-gradient(135deg,hsl('+hue(a.artist)+' 55% 32%),hsl('+(hue(a.title)+60)%360+' 50% 14%))';
+const all=()=>[...store.values()];
+const released=()=>all().filter(a=>a.date<=TODAY).sort((a,b)=>b.date.localeCompare(a.date));
+const spotifyQ=a=>'https://open.spotify.com/search/'+encodeURIComponent(a.artist+' '+a.title);
+const appleUrl=a=>/apple|itunes/i.test(a.source)?a.url:'https://music.apple.com/search?term='+encodeURIComponent(a.artist+' '+a.title);
+const deezerUrl=a=>a.source==='Deezer'?a.url:'https://www.deezer.com/search/'+encodeURIComponent(a.artist+' '+a.title);
+const imgTag=(a,big)=>a.cover?'<img loading="lazy" src="'+esc(big&&a.cover.includes('deezer')?a.cover.replace(/\/\d+x\d+-/,'/1000x1000-'):a.cover)+'" alt="Pochette de '+esc(a.title)+'" onerror="this.remove()">':'';
+const daysTo=d=>Math.round((new Date(d+'T12:00:00')-new Date(TODAY+'T12:00:00'))/864e5);
+const byId=id=>all().find(a=>a.id===id)||(searchResults||[]).find(a=>a.id===id)||favs[id];
+
+function poster(a){const up=a.date>TODAY;
+  return '<div class="poster" data-id="'+esc(a.id)+'"><div class="pimg" style="'+phBg(a)+'"><span class="ph">'+esc(initials(a.artist))+'</span>'+imgTag(a)
+  +'<span class="badge">'+esc((a.genre||a.kind).toUpperCase())+'</span>'+(up?'<span class="badge red">J-'+daysTo(a.date)+'</span>':a.date>=addDays(TODAY,-7)?'<span class="badge red">NOUVEAU</span>':'')
+  +'<div class="ov"><a href="'+esc(spotifyQ(a))+'" target="_blank" rel="noopener">Spotify</a><a href="'+esc(appleUrl(a))+'" target="_blank" rel="noopener">Apple</a><a href="'+esc(deezerUrl(a))+'" target="_blank" rel="noopener">Deezer</a></div>'
+  +'<button class="fav'+(favs[a.id]?' on':'')+'" data-fav="'+esc(a.id)+'" aria-label="Ajouter à ma liste">♥</button></div>'
+  +'<div class="pt" title="'+esc(a.title)+'">'+esc(a.title)+'</div><div class="pa"><span>'+esc(a.artist)+'</span><span class="d">'+dateLabel(a.date)+'</span></div></div>'}
+
+function heroHTML(a,spot){const up=a.date>TODAY,fav=favs[a.id];
+  return '<div class="htxt">'+(spot?'':'<div class="hbadge"><i></i>'+(up?'BIENTÔT DISPONIBLE':a.date>=addDays(TODAY,-7)?'NOUVELLE SORTIE':'À LA UNE')+'</div>')
+  +(spot?'<div class="hbadge"><i></i>LA PROCHAINE GROSSE SORTIE</div><h3>'+esc(a.title)+'</h3>':'<h1>'+esc(a.title)+'</h1>')
+  +'<div class="hartist">'+esc(a.artist)+'</div><div class="hmeta"><span class="pill">'+esc(a.kind)+'</span>'+(a.genre?'<span class="pill">'+esc(a.genre)+'</span>':'')+'<span class="pill">'+dateLabel(a.date)+'</span><span class="pill">via '+esc(a.source)+'</span></div>'
+  +(spot&&up?countHTML(a.date):'')
+  +'<div class="hbtns"><a class="btn red" href="'+esc(spotifyQ(a))+'" target="_blank" rel="noopener">▶ '+(up?'Pré-écouter':'Écouter')+'</a><button class="btn ghost'+(fav?' on':'')+'" data-fav="'+esc(a.id)+'">'+(fav?'✓ Dans ma liste':'+ Ma liste')+'</button><a class="btn ghost" href="'+esc(deezerUrl(a))+'" target="_blank" rel="noopener">Deezer ↗</a></div></div>'
+  +'<div class="hcover" style="'+phBg(a)+'"><span class="ph" style="font-size:60px">'+esc(initials(a.artist))+'</span>'+imgTag(a,true)+'</div>'}
+function countHTML(d){const t=new Date(d+'T00:00:00')-Date.now();const D=Math.max(0,Math.floor(t/864e5)),H=Math.max(0,Math.floor(t/36e5)%24),M=Math.max(0,Math.floor(t/6e4)%60);
+  return '<div class="count"><div><b>'+D+'</b><small>JOURS</small></div><div><b>'+H+'</b><small>HEURES</small></div><div><b>'+M+'</b><small>MIN</small></div></div>'}
+const bgUrl=a=>a.cover?'url("'+a.cover.replace(/"/g,'')+'")':'none';
+
+function drawHero(){const r=released();
+  // à la une : les plus récentes avec pochette, une par artiste
+  const seen=new Set();heroList=r.filter(a=>a.cover&&!a.noCoverOk&&!seen.has(a.artist)&&seen.add(a.artist)).slice(0,6);
+  if(!heroList.length)heroList=r.slice(0,5);
+  if(!heroList.length){$('hero').innerHTML='<div class="htxt"><div class="hbadge"><i></i>CHARGEMENT</div><h1>La musique ne s’arrête jamais.</h1><div class="hartist">Récupération des dernières sorties…</div></div>';return}
+  heroIdx%=heroList.length;const a=heroList[heroIdx];
+  if($('hero').dataset.id!==a.id){$('hero').innerHTML=heroHTML(a);$('hero').dataset.id=a.id;$('hbg').style.backgroundImage=bgUrl(a)}
+  $('hdots').innerHTML=heroList.map((_,i)=>'<button class="'+(i===heroIdx?'on':'')+'" data-h="'+i+'" aria-label="Sortie '+(i+1)+'"></button>').join('');
+  clearTimeout(heroTimer);heroTimer=setTimeout(()=>{heroIdx++;drawHero()},8000)}
+
+function drawTrends(){$('tpills').innerHTML=GENRES.map(g=>'<button class="gp'+(g.key===trendGenre?' active':'')+'" data-tg="'+esc(g.key)+'">'+esc(g.label)+'</button>').join('');
+  // tendances = sélection éditoriale Deezer + tops Apple, les plus récents d’abord
+  let l=released().filter(a=>a.source!=='MusicBrainz'&&(trendGenre==='Tous'||a.genre===trendGenre)).slice(0,24);
+  if(!l.length)l=released().filter(a=>trendGenre==='Tous'||a.genre===trendGenre).slice(0,24);
+  $('trow').innerHTML=l.length?l.map(poster).join(''):'<div class="empty">Rien dans ce genre pour le moment.</div>'}
+
+function drawAlbums(){const base=searchResults||all();let list=filtered(base);const period=$('period').value,sort=$('sort').value;
+  if(!searchResults&&!selected&&period==='all')list=list.filter(a=>a.date<=TODAY);
+  list.sort(sort==='az'?(a,b)=>a.title.localeCompare(b.title):sort==='old'||period==='upcoming'?(a,b)=>a.date.localeCompare(b.date):(a,b)=>b.date.localeCompare(a.date));
+  $('count').textContent=list.length+' projet(s)'+(searchResults?' · catalogue Apple Music':'');
+  $('listTitle').textContent=searchResults?'Résultats pour « '+$('search').value.trim()+' »':selected?'Sorties du '+dateLabel(selected):period==='upcoming'?'Sorties à venir':period==='week'?'Sorties de la semaine':period==='month'?'Sorties du mois':'Toutes les sorties';
+  if(!store.size&&!searchResults&&Object.values(status).some(s=>s.state==='load'))return;
+  $('albums').innerHTML=list.length?list.slice(0,shown).map(poster).join(''):'<div class="empty">Aucun projet ne correspond à ces filtres.<br>Essaie un autre genre, format, pays ou date.</div>';
+  $('more').hidden=list.length<=shown;$('more').textContent='Afficher plus ('+(list.length-shown)+')'}
+
+function drawCalendar(){const y=cursor.getFullYear(),m=cursor.getMonth(),offset=(new Date(y,m,1).getDay()+6)%7,n=new Date(y,m+1,0).getDate();
+  $('monthLabel').textContent=new Intl.DateTimeFormat('fr-FR',{month:'long',year:'numeric'}).format(cursor);
+  const counts={};const saved=selected;selected=null;filtered(all()).forEach(a=>counts[a.date]=(counts[a.date]||0)+1);selected=saved;
+  let h=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'].map(x=>'<div class="dayname">'+x+'</div>').join('');
+  for(let i=0;i<offset;i++)h+='<div class="day dim"></div>';
+  for(let d=1;d<=n;d++){const k=y+'-'+pad(m+1)+'-'+pad(d),c=counts[k];h+='<button class="day'+(selected===k?' selected':'')+(k===TODAY?' today':'')+'" data-date="'+k+'">'+d+(c?'<span class="n">'+c+'</span>':'')+'</button>'}
+  $('calendar').innerHTML=h;
+  $('calendar').querySelectorAll('[data-date]').forEach(b=>b.onclick=()=>{selected=selected===b.dataset.date?null:b.dataset.date;shown=PAGE;if(selected&&searchResults){searchResults=null;$('search').value=''}redraw();if(selected)$('sorties').scrollIntoView({block:'start'})})}
+
+function upcomingList(){const region=$('region').value;return all().filter(a=>a.date>TODAY&&(genre==='Tous'||!a.genre||a.genre===genre)&&(region==='all'||a.region===region)).sort((a,b)=>a.date.localeCompare(b.date))}
+function drawUpcoming(){const l=upcomingList().slice(0,24);$('urow').innerHTML=l.length?l.map(poster).join(''):'<div class="empty">'+(status.MusicBrainz?.state==='load'?'Chargement des sorties à venir…':'Aucune sortie annoncée pour ces filtres.')+'</div>'}
+function drawSpot(){const up=upcomingList();const a=up.find(x=>x.cover&&!x.noCoverOk)||up.find(x=>x.genre)||up[0];
+  if(!a){$('spotlight').innerHTML='';$('spotlight').dataset.id='';return}
+  if($('spotlight').dataset.id===a.id+countKey())return;$('spotlight').dataset.id=a.id+countKey();
+  $('spotlight').innerHTML='<div class="spot"><div class="hbg" style="background-image:'+bgUrl(a)+'"></div><div class="spin">'+heroHTML(a,true)+'</div></div>';
+  // si la pochette MusicBrainz n’existe pas, on retire le fond flou
+  if(a.noCoverOk){const i=new Image();i.onerror=()=>{const bg=$('spotlight').querySelector('.hbg');if(bg)bg.style.cssText=phBg(a)+';filter:brightness(.6)'};i.src=a.cover}}
+const countKey=()=>Math.floor(Date.now()/6e4);
+function drawFavs(){const l=Object.values(favs).sort((a,b)=>b.date.localeCompare(a.date));$('frow').innerHTML=l.length?l.map(poster).join(''):'<div class="empty">Clique sur ♥ sur une pochette pour la garder ici.</div>'}
+
+function markEmpty(){['trow','urow','frow'].forEach(id=>$(id).classList.toggle('isempty',!!$(id).querySelector('.empty')))}
+function redraw(){drawHero();drawTrends();drawCalendar();drawAlbums();drawSpot();drawUpcoming();drawFavs();markEmpty()}
+
+/* =====================================================================
+   ÉVÉNEMENTS
+   ===================================================================== */
+$('genres').innerHTML=GENRES.map(g=>'<button class="gp'+(g.key==='Tous'?' active':'')+'" data-genre="'+esc(g.key)+'">'+esc(g.label)+'</button>').join('');
+$('genres').addEventListener('click',e=>{const b=e.target.closest('[data-genre]');if(!b)return;$('genres').querySelector('.active').classList.remove('active');b.classList.add('active');genre=b.dataset.genre;shown=PAGE;drawAlbums();drawCalendar();drawUpcoming();drawSpot();markEmpty()});
+$('tpills').addEventListener('click',e=>{const b=e.target.closest('[data-tg]');if(!b)return;trendGenre=b.dataset.tg;drawTrends();markEmpty();$('trow').scrollLeft=0});
+$('hdots').addEventListener('click',e=>{const b=e.target.closest('[data-h]');if(!b)return;heroIdx=+b.dataset.h;drawHero()});
+document.addEventListener('click',e=>{
+  const f=e.target.closest('[data-fav]');if(f){e.stopPropagation();const id=f.dataset.fav;if(favs[id])delete favs[id];else{const a=byId(id);if(a)favs[id]=a}saveFavs();
+    if(favs[id])$('spotlight').dataset.id='';
+    document.querySelectorAll('[data-fav="'+CSS.escape(id)+'"]').forEach(x=>{x.classList.toggle('on',!!favs[id]);if(x.classList.contains('btn'))x.textContent=favs[id]?'✓ Dans ma liste':'+ Ma liste'});drawFavs();markEmpty();return}
+  const s=e.target.closest('[data-scroll]');if(s){const r=$(s.dataset.scroll);r.scrollBy({left:r.clientWidth*.9*(+s.dataset.dir),behavior:'smooth'});return}
+  const p=e.target.closest('.poster');if(p&&!e.target.closest('a')){const a=byId(p.dataset.id);if(a){heroList=[a].concat(heroList.filter(x=>x.id!==a.id));heroIdx=0;$('hero').innerHTML=heroHTML(a);$('hero').dataset.id=a.id;$('hbg').style.backgroundImage=bgUrl(a);clearTimeout(heroTimer);window.scrollTo({top:0,behavior:'smooth'})}}});
+['period','kind','sort'].forEach(id=>$(id).addEventListener('change',()=>{shown=PAGE;drawAlbums();drawCalendar()}));
+$('region').addEventListener('change',()=>{shown=PAGE;loadRegion($('region').value);redraw()});
+let st;$('search').addEventListener('input',()=>{clearTimeout(st);const q=$('search').value.trim();
+  if(q.length<3){if(searchResults){searchResults=null;shown=PAGE;drawAlbums()}return}
+  st=setTimeout(async()=>{const my=++searchSeq;const R=$('region').value;const cc=R!=='all'?REGIONS[R].apple[0]:'fr';
+    const local=all().filter(a=>norm(a.title+' '+a.artist).includes(norm(q)));let r=[];
+    try{r=await Sources.itunesSearch(q,cc)}catch(e){}
+    if(my!==searchSeq)return;const m=new Map();[...local,...r].forEach(a=>{const k=norm(a.artist)+'|'+norm(a.title);if(!m.has(k))m.set(k,a)});
+    searchResults=[...m.values()];selected=null;shown=PAGE;drawAlbums();$('sorties').scrollIntoView({block:'start'})},400)});
+$('more').onclick=()=>{shown+=PAGE;drawAlbums()};
+$('prev').onclick=()=>{cursor.setMonth(cursor.getMonth()-1);drawCalendar();loadMonth(cursor)};
+$('next').onclick=()=>{cursor.setMonth(cursor.getMonth()+1);drawCalendar();loadMonth(cursor)};
+$('todayBtn').onclick=()=>{cursor=new Date();cursor.setDate(1);drawCalendar()};
+addEventListener('scroll',()=>$('nav').classList.toggle('solid',scrollY>40),{passive:true});
+setInterval(()=>{const c=$('spotlight').querySelector('.count');if(c){const a=upcomingList()[0];if(a)drawSpot()}},60000);
+
+boot();
+</script></body></html>

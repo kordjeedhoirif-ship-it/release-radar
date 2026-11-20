@@ -16,7 +16,7 @@ const GENRES = [
   { key: 'Afro', deezer: 2, match: /afro|african|africa|amapiano|highlife|coupé|ndombolo|zouk/i },
   { key: 'R&B', deezer: 165, match: /r&b|rnb|soul/i },
   { key: 'Rap', deezer: 116, match: /rap|hip.?hop|drill|trap/i },
-  { key: 'Pop', deezer: 132, match: /pop/i },
+  { key: 'Pop', deezer: 132, match: /pop|k-pop|j-pop|dance|singer\/songwriter/i },
   { key: 'Latino', deezer: 197, match: /latin|reggaeton|urbano/i },
 ];
 const REGIONS = {
@@ -39,15 +39,16 @@ const genreFrom = txt => { for (const g of GENRES) if (g.match && g.match.test(t
 const kindOf = t => { t = String(t || '').toLowerCase(); if (t.includes('single')) return 'Single'; if (t === 'ep' || / ep\b|- ep/.test(t)) return 'EP'; return 'Album'; };
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
 
-async function getJSON(url, tries = 3) {
+async function getJSON(url, tries = 4) {
   for (let i = 0; i < tries; i++) {
     try {
-      const r = await fetch(url, { headers: { 'User-Agent': UA, Accept: 'application/json' }, signal: AbortSignal.timeout(20000) });
+      const r = await fetch(url, { headers: { 'User-Agent': UA, Accept: 'application/json' }, signal: AbortSignal.timeout(40000) });
       if (r.status === 429 || r.status === 503) { await sleep(3000 * (i + 1)); continue; }
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return await r.json();
     } catch (e) { if (i === tries - 1) throw e; await sleep(1500 * (i + 1)); }
   }
+  throw new Error('serveur saturé (429/503)');
 }
 // MusicBrainz : 1 requête par seconde maximum
 let mbLast = 0;
@@ -174,6 +175,13 @@ for (const a of missing) {
   if (a.cover) found++;
 }
 log('Pochettes trouvées :', found, '/', missing.length);
+
+// genres manquants : on demande à iTunes (limité pour rester sous ~25 min)
+const noGenre = [...store.values()].filter(a => a.cover && !a.genre);
+log('Genres à trouver :', noGenre.length);
+let gFound = 0;
+for (const a of noGenre.slice(0, 220)) { const m = await itunesMatch(a); if (m?.genre) { a.genre = m.genre; gFound++; } }
+log('Genres trouvés :', gFound);
 
 // on ne publie que les sorties qui ont une vraie pochette
 const items = [...store.values()].filter(a => a.cover)

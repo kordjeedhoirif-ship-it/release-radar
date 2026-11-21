@@ -11,6 +11,10 @@ a{color:inherit}button{font:inherit}
 .nav .wrap{display:flex;align-items:center;gap:28px;height:66px}
 .brand{font:700 19px 'Space Grotesk',sans-serif;letter-spacing:-.6px;white-space:nowrap;text-decoration:none}.brand b{color:var(--red2)}
 .menu{display:flex;gap:22px;font-size:13px}.menu a{text-decoration:none;color:#cfcfd8}.menu a:hover{color:#fff}
+.fmt{display:flex;background:#ffffff12;border:1px solid #ffffff22;border-radius:30px;padding:3px;flex:none}
+.fmt button{border:0;background:none;color:#cfcfd8;border-radius:30px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer}
+.fmt button.on{background:var(--red);color:#fff;box-shadow:0 4px 14px #e8213a55}
+@media(max-width:520px){.fmt button{padding:6px 11px;font-size:12px}.nav .wrap{gap:10px}}
 .nsearch{margin-left:auto;position:relative}.nsearch input{width:260px;background:#ffffff12;border:1px solid #ffffff20;border-radius:30px;color:#fff;padding:9px 14px 9px 34px;outline:none;font:inherit;font-size:13px;transition:width .3s}
 .nsearch input:focus{width:320px;border-color:var(--red)}.nsearch svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.6}
 /* HERO */
@@ -127,6 +131,7 @@ body.playing .shell,body.playing main{padding-bottom:90px}
 </style></head><body>
 <nav class="nav" id="nav"><div class="wrap">
   <a class="brand" href="#top">RELEASE<b>RADAR</b></a>
+  <div class="fmt" id="fmt" role="tablist" aria-label="Type de sortie"><button role="tab" data-fmt="album" class="on">Albums</button><button role="tab" data-fmt="single">Singles</button></div>
   <div class="menu"><a href="#trends">Tendances</a><a href="#sorties">Sorties</a><a href="#bientot">À venir</a><a href="#calendrier">Calendrier</a><a href="#maliste">Ma liste</a></div>
   <label class="nsearch"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="search" placeholder="Artiste, album…" autocomplete="off"></label>
 </div></nav>
@@ -148,7 +153,6 @@ body.playing .shell,body.playing main{padding-bottom:90px}
     <div class="pills" id="genres" style="margin-bottom:12px"></div>
     <div class="ctrls">
       <select id="period"><option value="all">Toutes les dates</option><option value="week">7 derniers jours</option><option value="month">Ce mois-ci</option><option value="upcoming">À venir</option></select>
-      <select id="kind"><option value="all">Tous formats</option><option value="Album">Albums</option><option value="EP">EP</option><option value="Single">Singles</option></select>
       <select id="region"><option value="all">Monde entier</option><option value="FR">France</option><option value="US">USA</option><option value="GB">UK</option><option value="AF">Afrique</option></select>
       <select id="sort"><option value="new">Plus récentes</option><option value="top">Les plus écoutées</option><option value="old">Plus anciennes</option><option value="az">A → Z</option></select>
     </div>
@@ -272,7 +276,7 @@ const store=new Map(); // clé normalisée artiste+titre → album
 let genre='Tous',selected=null,cursor=new Date();cursor.setDate(1);let shown=PAGE,searchResults=null,searchSeq=0;
 const status={};const loadedMonths=new Set();const loadedRegions=new Set();
 
-function add(list){for(const a of list){if(!a||!a.title||!a.date||a.date<MIN_DATE)continue;const k=norm(a.artist)+'|'+norm(a.title);const old=store.get(k);
+function add(list){for(const a of list){if(!a||!a.title||!a.date||a.date<MIN_DATE)continue;const k=norm(a.artist)+'|'+norm(a.title)+'|'+(a.kind==='Single'?'S':'A');const old=store.get(k);
   if(!old){store.set(k,a);continue}
   // fusion : on garde la meilleure info de chaque source
   if(!old.genre&&a.genre)old.genre=a.genre;if(!old.style&&a.style)old.style=a.style;if(a.rank&&(!old.rank||a.rank<old.rank))old.rank=a.rank;if(!old.region&&a.region)old.region=a.region;
@@ -318,11 +322,11 @@ async function boot(){
 /* =====================================================================
    AFFICHAGE — interface façon streaming
    ===================================================================== */
-function filtered(base){const q=norm($('search').value),period=$('period').value,kind=$('kind').value,region=$('region').value;
+function filtered(base){const q=norm($('search').value),period=$('period').value,region=$('region').value;
   const monthKey=TODAY.slice(0,7),weekAgo=addDays(TODAY,-7);
   return base.filter(a=>(genre==='Tous'||a.genre===genre)
     &&(!q||q.length<3||searchResults||norm(a.title+' '+a.artist).includes(q))
-    &&(kind==='all'||a.kind===kind)
+    &&fmtOK(a)
     &&(region==='all'||searchResults||a.region===region)
     &&(!selected||a.date===selected)
     &&(period==='all'||(period==='upcoming'&&a.date>TODAY)||(period==='month'&&a.date.startsWith(monthKey))||(period==='week'&&a.date>=weekAgo&&a.date<=TODAY)))}
@@ -331,7 +335,10 @@ const favs=(()=>{try{return JSON.parse(localStorage.getItem('rr:favs'))||{}}catc
 const saveFavs=()=>{try{localStorage.setItem('rr:favs',JSON.stringify(favs))}catch(e){}};
 const hue=s=>{let h=0;for(const c of String(s))h=(h*31+c.charCodeAt(0))%360;return h};
 const phBg=a=>'background:linear-gradient(135deg,hsl('+hue(a.artist)+' 55% 32%),hsl('+(hue(a.title)+60)%360+' 50% 14%))';
-const all=()=>[...store.values()];
+// bouton Albums / Singles (choix mémorisé)
+let fmt=(()=>{try{return localStorage.getItem('rr:fmt')||'album'}catch(e){return 'album'}})();
+const fmtOK=a=>fmt==='single'?a.kind==='Single':a.kind!=='Single';
+const all=()=>[...store.values()].filter(fmtOK);
 const released=()=>all().filter(a=>a.date<=TODAY).sort((a,b)=>b.date.localeCompare(a.date));
 const spotifyQ=a=>'https://open.spotify.com/search/'+encodeURIComponent(a.artist+' '+a.title);
 const appleUrl=a=>/apple|itunes/i.test(a.source)?a.url:'https://music.apple.com/search?term='+encodeURIComponent(a.artist+' '+a.title);
@@ -348,7 +355,7 @@ function poster(a){const up=a.date>TODAY;
   +'<div class="pt" title="'+esc(a.title)+'">'+esc(a.title)+'</div><div class="pa"><span>'+esc(a.artist)+'</span><span class="d">'+dateLabel(a.date)+'</span></div></div>'}
 
 function heroHTML(a,spot){const up=a.date>TODAY,fav=favs[a.id];
-  return '<div class="htxt">'+(spot?'':'<div class="hbadge"><i></i>'+(up?'BIENTÔT DISPONIBLE':a.date>=addDays(TODAY,-7)?'NOUVELLE SORTIE':'À LA UNE')+'</div>')
+  return '<div class="htxt">'+(spot?'':'<div class="hbadge"><i></i>'+(up?'BIENTÔT DISPONIBLE':a.date>=addDays(TODAY,-7)?(a.kind==='Single'?'NOUVEAU SINGLE':'NOUVEL ALBUM'):'À LA UNE')+'</div>')
   +(spot?'<div class="hbadge"><i></i>LA PROCHAINE GROSSE SORTIE</div><h3>'+esc(a.title)+'</h3>':'<h1>'+esc(a.title)+'</h1>')
   +'<div class="hartist">'+esc(a.artist)+'</div><div class="hmeta"><span class="pill">'+esc(a.kind)+'</span>'+(a.genre?'<span class="pill">'+esc(a.genre)+'</span>':'')+'<span class="pill">'+dateLabel(a.date)+'</span><span class="pill">via '+esc(a.source)+'</span></div>'
   +(spot&&up?countHTML(a.date):'')
@@ -385,7 +392,7 @@ function drawAlbums(){const base=searchResults||all();let list=filtered(base);co
   if(!searchResults&&!selected&&period==='all')list=list.filter(a=>a.date<=TODAY);
   list.sort(sort==='top'?(a,b)=>(a.rank||999)-(b.rank||999)||b.date.localeCompare(a.date):sort==='az'?(a,b)=>a.title.localeCompare(b.title):sort==='old'||period==='upcoming'?(a,b)=>a.date.localeCompare(b.date):(a,b)=>b.date.localeCompare(a.date));
   $('count').textContent=list.length+' projet(s)'+(searchResults?' · catalogue Apple Music':'');
-  $('listTitle').textContent=searchResults?'Résultats pour « '+$('search').value.trim()+' »':selected?'Sorties du '+dateLabel(selected):period==='upcoming'?'Sorties à venir':period==='week'?'Sorties de la semaine':period==='month'?'Sorties du mois':'Toutes les sorties';
+  $('listTitle').textContent=searchResults?'Résultats pour « '+$('search').value.trim()+' »':selected?'Sorties du '+dateLabel(selected):period==='upcoming'?'Sorties à venir':period==='week'?'Sorties de la semaine':period==='month'?'Sorties du mois':(fmt==='single'?'Tous les singles':'Tous les albums & EP');
   if(!store.size&&!searchResults&&Object.values(status).some(s=>s.state==='load'))return;
   $('albums').innerHTML=list.length?list.slice(0,shown).map(poster).join(''):'<div class="empty">Aucun projet ne correspond à ces filtres.<br>Essaie un autre genre, format, pays ou date.</div>';
   $('more').hidden=list.length<=shown;$('more').textContent='Afficher plus ('+(list.length-shown)+')'}
@@ -427,14 +434,19 @@ document.addEventListener('click',e=>{
   const s=e.target.closest('[data-scroll]');if(s){const r=$(s.dataset.scroll);r.scrollBy({left:r.clientWidth*.9*(+s.dataset.dir),behavior:'smooth'});return}
   const p=e.target.closest('.poster');if(p&&!e.target.closest('a')){const a=byId(p.dataset.id);if(a)openSheet(a);return}
   const h=e.target.closest('[data-open]');if(h){const a=byId(h.dataset.open);if(a)openSheet(a)}});
-['period','kind','sort'].forEach(id=>$(id).addEventListener('change',()=>{shown=PAGE;drawAlbums();drawCalendar()}));
+function setFmt(f){fmt=f;try{localStorage.setItem('rr:fmt',f)}catch(e){}
+  $('fmt').querySelectorAll('button').forEach(b=>{b.classList.toggle('on',b.dataset.fmt===f);b.setAttribute('aria-selected',b.dataset.fmt===f)});
+  shown=PAGE;selected=null;heroIdx=0;$('hero').dataset.id='';$('spotlight').dataset.id='';redraw();markEmpty()}
+$('fmt').addEventListener('click',e=>{const b=e.target.closest('[data-fmt]');if(b&&b.dataset.fmt!==fmt)setFmt(b.dataset.fmt)});
+$('fmt').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.fmt===fmt));
+['period','sort'].forEach(id=>$(id).addEventListener('change',()=>{shown=PAGE;drawAlbums();drawCalendar()}));
 $('region').addEventListener('change',()=>{shown=PAGE;loadRegion($('region').value);redraw()});
 let st;$('search').addEventListener('input',()=>{clearTimeout(st);const q=$('search').value.trim();
   if(q.length<3){if(searchResults){searchResults=null;shown=PAGE;drawAlbums()}return}
   st=setTimeout(async()=>{const my=++searchSeq;const R=$('region').value;const cc=R!=='all'?REGIONS[R].apple[0]:'fr';
     const local=all().filter(a=>norm(a.title+' '+a.artist).includes(norm(q)));let r=[];
     try{r=await Sources.itunesSearch(q,cc)}catch(e){}
-    if(my!==searchSeq)return;const m=new Map();[...local,...r].forEach(a=>{const k=norm(a.artist)+'|'+norm(a.title);if(!m.has(k))m.set(k,a)});
+    if(my!==searchSeq)return;const m=new Map();[...local,...r].forEach(a=>{const k=norm(a.artist)+'|'+norm(a.title)+'|'+a.kind;if(!m.has(k))m.set(k,a)});
     searchResults=[...m.values()];selected=null;shown=PAGE;drawAlbums();$('sorties').scrollIntoView({block:'start'})},400)});
 $('more').onclick=()=>{shown+=PAGE;drawAlbums()};
 $('prev').onclick=()=>{cursor.setMonth(cursor.getMonth()-1);drawCalendar();loadMonth(cursor)};

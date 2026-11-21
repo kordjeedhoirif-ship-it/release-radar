@@ -77,23 +77,25 @@ async function deezer() {
   return out;
 }
 
+const cleanTitle = t => String(t || '').replace(/\s+-\s+(Single|EP)\s*$/i, '');
 async function appleTop() {
   const out = [];
-  for (const [R, cfg] of Object.entries(REGIONS)) for (const cc of cfg.apple) {
+  // classements Apple Music : albums les plus écoutés ET titres les plus écoutés (= singles)
+  for (const feed of ['albums', 'songs']) for (const [R, cfg] of Object.entries(REGIONS)) for (const cc of cfg.apple) {
     try {
-      const r = await getJSON(`https://rss.applemarketingtools.com/api/v2/${cc}/music/most-played/100/albums.json`);
+      const r = await getJSON(`https://rss.applemarketingtools.com/api/v2/${cc}/music/most-played/100/${feed}.json`);
       for (const [i, a] of (r.feed?.results || []).entries()) out.push({
-        id: 'ap' + a.id, title: a.name, artist: a.artistName, genre: genreFrom((a.genres || []).map(x => x.name).join(' ')),
-        date: (a.releaseDate || '').slice(0, 10), kind: 'Album', cover: big(a.artworkUrl100), url: a.url, source: 'Apple Music', region: R, rank: i + 1, style: (a.genres || []).map(x => x.name).find(n => !/^music|musique$/i.test(n)) || null,
+        id: 'ap' + a.id, title: cleanTitle(a.name), artist: a.artistName, genre: genreFrom((a.genres || []).map(x => x.name).join(' ')),
+        date: (a.releaseDate || '').slice(0, 10), kind: feed === 'songs' ? 'Single' : kindOf(a.name), cover: big(a.artworkUrl100), url: a.url, source: 'Apple Music', region: R, rank: i + 1, style: (a.genres || []).map(x => x.name).find(n => !/^music|musique$/i.test(n)) || null,
       });
-      log('Apple', cc, (r.feed?.results || []).length);
+      log('Apple', feed, cc, (r.feed?.results || []).length);
     } catch (e) { log('Apple', cc, 'ÉCHEC', e.message); }
   }
   return out;
 }
 
-async function musicbrainzRange(from, to, countries) {
-  let q = `date:[${from} TO ${to}] AND status:official AND (primarytype:album OR primarytype:ep)`;
+async function musicbrainzRange(from, to, countries, types = '(primarytype:album OR primarytype:ep)') {
+  let q = `date:[${from} TO ${to}] AND status:official AND ${types}`;
   if (countries?.length) q += ' AND (' + countries.map(c => 'country:' + c).join(' OR ') + ')';
   const out = [];
   for (let offset = 0; offset < 300; offset += 100) {
@@ -119,8 +121,10 @@ async function musicbrainz() {
   const out = [];
   const jobs = [[TODAY, MAX, null], [addDays(TODAY, -45), addDays(TODAY, -1), null]];
   for (const [R, cfg] of Object.entries(REGIONS)) jobs.push([TODAY, MAX, cfg.mb], [addDays(TODAY, -45), addDays(TODAY, -1), cfg.mb]);
-  for (const [f, t, c] of jobs) {
-    try { const l = await musicbrainzRange(f, t, c); out.push(...l); log('MusicBrainz', f, '→', t, c ? c.join(',') : 'monde', l.length); }
+  // singles : mêmes périodes et mêmes pays
+  for (const [f, t, c] of [...jobs]) jobs.push([f, t, c, 'primarytype:single']);
+  for (const [f, t, c, ty] of jobs) {
+    try { const l = await musicbrainzRange(f, t, c, ty); out.push(...l); log('MusicBrainz', ty ? 'singles' : 'albums', f, '→', t, c ? c.join(',') : 'monde', l.length); }
     catch (e) { log('MusicBrainz', f, t, 'ÉCHEC', e.message); }
   }
   return out;
@@ -175,16 +179,19 @@ const previous = new Map();
 try {
   const { readFile } = await import('node:fs/promises');
   const old = JSON.parse(await readFile(new URL('../data/releases.json', import.meta.url), 'utf8'));
-  for (const a of old.items || []) previous.set(norm(a.artist) + '|' + norm(a.title), a);
+  for (const a of old.items || []) previous.set(keyOf(a), a);
   log('Passage précédent :', previous.size, 'sorties en mémoire');
 } catch { log('Pas de passage précédent'); }
+
+// un single et un album du même nom sont deux sorties différentes
+const keyOf = a => norm(a.artist) + '|' + norm(a.title) + '|' + (a.kind === 'Single' ? 'S' : 'A');
 
 // ---------- assemblage ----------
 const store = new Map();
 function add(list) {
   for (const a of list) {
     if (!a?.title || !a.artist || !a.date || a.date < MIN || a.date > MAX) continue;
-    const k = norm(a.artist) + '|' + norm(a.title);
+    const k = keyOf(a);
     const old = store.get(k);
     if (!old) { store.set(k, { ...a }); continue; }
     if (!old.genre && a.genre) old.genre = a.genre;

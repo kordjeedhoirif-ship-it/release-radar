@@ -13,7 +13,8 @@ const FUTURE_DAYS = 120; // et celles annoncées dans les 4 prochains mois
 
 const GENRES = [
   { key: null, deezer: 0 },
-  { key: 'Afro', deezer: 2, match: /afro|african|africa|amapiano|highlife|coupé|ndombolo|zouk/i },
+  { key: 'Kompa', deezer: null, match: /kompa|konpa|compas|zouk|kizomba|kuduro|semba|tarraxinha|antilles|carib|cara[iï]b|haiti|ghetto zouk|bouyon|dancehall/i },
+  { key: 'Afro', deezer: 2, match: /afro|african|africa|amapiano|highlife|coupé|ndombolo|bongo|gqom|naija/i },
   { key: 'R&B', deezer: 165, match: /r&b|rnb|soul/i },
   { key: 'Rap', deezer: 116, match: /rap|hip.?hop|drill|trap/i },
   { key: 'Pop', deezer: 132, match: /pop|k-pop|j-pop|dance|singer\/songwriter/i },
@@ -23,7 +24,7 @@ const REGIONS = {
   FR: { apple: ['fr'], mb: ['FR'] },
   US: { apple: ['us'], mb: ['US'] },
   GB: { apple: ['gb'], mb: ['GB'] },
-  AF: { apple: ['ng', 'za'], mb: ['NG', 'ZA', 'GH', 'CI', 'SN', 'CM', 'KE'] },
+  AF: { apple: ['ng', 'za', 'ci', 'gh', 'ke'], mb: ['NG', 'ZA', 'GH', 'CI', 'SN', 'CM', 'KE'] },
 };
 
 // ---------- outils ----------
@@ -62,7 +63,7 @@ const big = u => (u || '').replace(/\/\d+x\d+bb\./, '/600x600bb.');
 // ---------- sources ----------
 async function deezer() {
   const out = [];
-  for (const g of GENRES) {
+  for (const g of GENRES.filter(g => g.deezer !== null)) {
     try {
       const r = await getJSON(`https://api.deezer.com/editorial/${g.deezer}/releases?limit=100`);
       for (const a of r.data || []) out.push({
@@ -81,9 +82,9 @@ async function appleTop() {
   for (const [R, cfg] of Object.entries(REGIONS)) for (const cc of cfg.apple) {
     try {
       const r = await getJSON(`https://rss.applemarketingtools.com/api/v2/${cc}/music/most-played/100/albums.json`);
-      for (const a of r.feed?.results || []) out.push({
+      for (const [i, a] of (r.feed?.results || []).entries()) out.push({
         id: 'ap' + a.id, title: a.name, artist: a.artistName, genre: genreFrom((a.genres || []).map(x => x.name).join(' ')),
-        date: (a.releaseDate || '').slice(0, 10), kind: 'Album', cover: big(a.artworkUrl100), url: a.url, source: 'Apple Music', region: R, top: true,
+        date: (a.releaseDate || '').slice(0, 10), kind: 'Album', cover: big(a.artworkUrl100), url: a.url, source: 'Apple Music', region: R, rank: i + 1, style: (a.genres || []).map(x => x.name).find(n => !/^music|musique$/i.test(n)) || null,
       });
       log('Apple', cc, (r.feed?.results || []).length);
     } catch (e) { log('Apple', cc, 'ÉCHEC', e.message); }
@@ -142,9 +143,41 @@ async function itunesMatch(a) {
     const t = norm(a.title), ar = norm(a.artist);
     const hit = (r.results || []).find(x => norm(x.collectionName) === t && (norm(x.artistName).includes(ar) || ar.includes(norm(x.artistName))))
       || (r.results || []).find(x => norm(x.collectionName).startsWith(t) && norm(x.artistName) === ar);
-    return hit ? { cover: big(hit.artworkUrl100), url: hit.collectionViewUrl, genre: genreFrom(hit.primaryGenreName) } : null;
+    return hit ? { cover: big(hit.artworkUrl100), url: hit.collectionViewUrl, genre: genreFrom(hit.primaryGenreName), style: hit.primaryGenreName } : null;
   } catch { return null; }
 }
+
+// recherches ciblées pour les styles absents des classements (Kompa, Zouk, Kizomba…)
+const SEEDS = [['Kompa', ['kompa', 'konpa', 'compas haiti', 'zouk', 'zouk love', 'kizomba', 'ghetto zouk', 'kuduro']]];
+async function seeds() {
+  const out = [];
+  for (const [key, terms] of SEEDS) for (const term of terms) for (const cc of ['fr', 'us', 'pt']) {
+    try {
+      const r = await itunes(`https://itunes.apple.com/search?entity=album&limit=100&country=${cc}&term=` + encodeURIComponent(term));
+      let n = 0;
+      for (const a of r.results || []) {
+        const d = (a.releaseDate || '').slice(0, 10);
+        if (d < MIN || d > MAX) continue;
+        // on garde si le genre iTunes ou le titre/artiste correspond vraiment au style
+        if (genreFrom(a.primaryGenreName) !== key && genreFrom(a.collectionName + ' ' + a.artistName) !== key) continue;
+        n++; out.push({ id: 'it' + a.collectionId, title: a.collectionName, artist: a.artistName, genre: key, style: a.primaryGenreName,
+          date: d, kind: kindOf(a.collectionName + (a.trackCount <= 3 ? ' single' : a.trackCount <= 7 ? ' ep' : '')),
+          cover: big(a.artworkUrl100), url: a.collectionViewUrl, source: 'Apple Music', region: null });
+      }
+      log('Recherche', key, '«' + term + '»', cc, n);
+    } catch (e) { log('Recherche', term, cc, 'ÉCHEC', e.message); }
+  }
+  return out;
+}
+
+// mémoire du passage précédent : genres déjà trouvés, recherches déjà faites
+const previous = new Map();
+try {
+  const { readFile } = await import('node:fs/promises');
+  const old = JSON.parse(await readFile(new URL('../data/releases.json', import.meta.url), 'utf8'));
+  for (const a of old.items || []) previous.set(norm(a.artist) + '|' + norm(a.title), a);
+  log('Passage précédent :', previous.size, 'sorties en mémoire');
+} catch { log('Pas de passage précédent'); }
 
 // ---------- assemblage ----------
 const store = new Map();
@@ -155,6 +188,8 @@ function add(list) {
     const old = store.get(k);
     if (!old) { store.set(k, { ...a }); continue; }
     if (!old.genre && a.genre) old.genre = a.genre;
+    if (!old.style && a.style) old.style = a.style;
+    if (a.rank && (!old.rank || a.rank < old.rank)) { old.rank = a.rank; if (a.region) old.region = a.region; }
     if (!old.region && a.region) old.region = a.region;
     if (!old.cover && a.cover) { old.cover = a.cover; old.url = a.url; old.source = a.source; }
   }
@@ -164,6 +199,15 @@ const t0 = Date.now();
 add(await deezer());          // Deezer en premier : genres + pochettes HD
 add(await appleTop());
 add(await musicbrainz());
+add(await seeds());
+
+// on récupère ce que les passages précédents avaient déjà trouvé
+for (const [k, a] of store) {
+  const p = previous.get(k);
+  if (!p) continue;
+  a.genre ||= p.genre; a.style ||= p.style; a.checked ||= p.checked;
+  if (!a.cover && p.cover) { a.cover = p.cover; a.url = p.url; a.source = p.source; }
+}
 
 // pochettes manquantes
 const missing = [...store.values()].filter(a => !a.cover);
@@ -171,21 +215,25 @@ log('Pochettes à trouver :', missing.length);
 let found = 0, itCalls = 0;
 for (const a of missing) {
   if (a.rg) { a.cover = await caaCover(a.rg); await sleep(300); }
-  if (!a.cover && itCalls < 120) { itCalls++; const m = await itunesMatch(a); if (m) { a.cover = m.cover; a.genre ||= m.genre; a.url = m.url; a.source = 'Apple Music'; } }
+  if (!a.cover && itCalls < 120) { itCalls++; const m = await itunesMatch(a); if (m) { a.cover = m.cover; a.genre ||= m.genre; a.style ||= m.style; a.url = m.url; a.source = 'Apple Music'; } }
   if (a.cover) found++;
 }
 log('Pochettes trouvées :', found, '/', missing.length);
 
 // genres manquants : on demande à iTunes (limité pour rester sous ~25 min)
-const noGenre = [...store.values()].filter(a => a.cover && !a.genre);
+// (chaque sortie n'est cherchée qu'une fois : « checked » est gardé d'un passage à l'autre)
+const noGenre = [...store.values()].filter(a => a.cover && !a.genre && !a.checked)
+  .sort((a, b) => (a.rank || 999) - (b.rank || 999) || b.date.localeCompare(a.date));
 log('Genres à trouver :', noGenre.length);
 let gFound = 0;
-for (const a of noGenre.slice(0, 220)) { const m = await itunesMatch(a); if (m?.genre) { a.genre = m.genre; gFound++; } }
+for (const a of noGenre.slice(0, 260)) { const m = await itunesMatch(a); a.checked = 1; if (m?.style) a.style ||= m.style; if (m?.genre) { a.genre = m.genre; gFound++; } }
+// un style connu peut aussi donner le genre (ex. « Zouk » → Kompa)
+for (const a of store.values()) if (!a.genre && a.style) a.genre = genreFrom(a.style);
 log('Genres trouvés :', gFound);
 
 // on ne publie que les sorties qui ont une vraie pochette
 const items = [...store.values()].filter(a => a.cover)
-  .map(({ rg, top, ...a }) => a)
+  .map(({ rg, ...a }) => a)
   .sort((a, b) => b.date.localeCompare(a.date));
 
 if (items.length < 20) { console.error('Trop peu de sorties (' + items.length + '), fichier non remplacé.'); process.exit(1); }

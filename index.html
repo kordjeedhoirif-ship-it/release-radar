@@ -120,7 +120,7 @@ select{background:var(--panel2);border:1px solid var(--line);border-radius:30px;
       <select id="period"><option value="all">Toutes les dates</option><option value="week">7 derniers jours</option><option value="month">Ce mois-ci</option><option value="upcoming">À venir</option></select>
       <select id="kind"><option value="all">Tous formats</option><option value="Album">Albums</option><option value="EP">EP</option><option value="Single">Singles</option></select>
       <select id="region"><option value="all">Monde entier</option><option value="FR">France</option><option value="US">USA</option><option value="GB">UK</option><option value="AF">Afrique</option></select>
-      <select id="sort"><option value="new">Plus récentes</option><option value="old">Plus anciennes</option><option value="az">A → Z</option></select>
+      <select id="sort"><option value="new">Plus récentes</option><option value="top">Les plus écoutées</option><option value="old">Plus anciennes</option><option value="az">A → Z</option></select>
     </div>
     <div class="grid" id="albums"></div><button class="more" id="more" hidden>Afficher plus</button>
   </section>
@@ -152,11 +152,12 @@ select{background:var(--panel2);border:1px solid var(--line);border-radius:30px;
    ===================================================================== */
 const GENRES=[ // id Deezer de la sélection éditoriale + mots-clés pour reconnaître le genre ailleurs
   {key:'Tous',label:'Tout',deezer:0},
-  {key:'Afro',label:'Afro',deezer:2,match:/afro|african|africa|amapiano|highlife|coupé|ndombolo|zouk/i},
+  {key:'Afro',label:'Afro',deezer:2,match:/afro|african|africa|amapiano|highlife|coupé|ndombolo|bongo|gqom|naija/i},
   {key:'R&B',label:'R&B',deezer:165,match:/r&b|rnb|soul/i},
   {key:'Rap',label:'Rap',deezer:116,match:/rap|hip.?hop|drill|trap/i},
   {key:'Pop',label:'Pop',deezer:132,match:/pop/i},
   {key:'Latino',label:'Latino',deezer:197,match:/latin|reggaeton|urbano/i},
+  {key:'Kompa',label:'Kompa · Zouk · Kizomba',deezer:null,match:/kompa|konpa|compas|zouk|kizomba|kuduro|semba|tarraxinha|antilles|carib|cara[iï]b|haiti|bouyon|dancehall/i},
 ];
 const REGIONS={FR:{apple:['fr'],mb:['FR']},US:{apple:['us'],mb:['US']},GB:{apple:['gb'],mb:['GB']},AF:{apple:['ng','za'],mb:['NG','ZA','GH','CI','SN','CM','KE']}};
 const CACHE_TTL=6*3600*1000, PAGE=24;
@@ -235,7 +236,7 @@ const status={};const loadedMonths=new Set();const loadedRegions=new Set();
 function add(list){for(const a of list){if(!a||!a.title||!a.date||a.date<MIN_DATE)continue;const k=norm(a.artist)+'|'+norm(a.title);const old=store.get(k);
   if(!old){store.set(k,a);continue}
   // fusion : on garde la meilleure info de chaque source
-  if(!old.genre&&a.genre)old.genre=a.genre;if(!old.region&&a.region)old.region=a.region;
+  if(!old.genre&&a.genre)old.genre=a.genre;if(!old.style&&a.style)old.style=a.style;if(a.rank&&(!old.rank||a.rank<old.rank))old.rank=a.rank;if(!old.region&&a.region)old.region=a.region;
   if(old.noCoverOk&&!a.noCoverOk){old.cover=a.cover;old.noCoverOk=false;old.url=a.url;old.source=a.source}
   if(a.date&&a.date.length>(old.date||'').length)old.date=a.date}}
 
@@ -265,7 +266,7 @@ async function boot(){
     setStatus('Base Release Radar','ok',d.items.length+' sorties · mise à jour '+ago(d.updated));redraw();return}
   catch(e){delete status['Base Release Radar'];console.info('Pas de base locale, passage en direct',e.message)}
   // 2) sinon : connexion directe aux sources depuis le navigateur
-  const dz=run('Deezer',async()=>{const res=await Promise.allSettled(GENRES.map(g=>Sources.deezer(g)));
+  const dz=run('Deezer',async()=>{const res=await Promise.allSettled(GENRES.filter(g=>g.deezer!==null).map(g=>Sources.deezer(g)));
     res.slice(1).concat(res.slice(0,1)).forEach(r=>r.status==='fulfilled'&&add(r.value));
     const n=res.filter(r=>r.status==='fulfilled').reduce((s,r)=>s+r.value.length,0);if(!n)throw new Error('vide');redraw();return n});
   const mb=run('MusicBrainz',async()=>{const l=await Sources.musicbrainz(TODAY,addDays(TODAY,90));add(l);loadedMonths.add(TODAY.slice(0,7));redraw();return l.length});
@@ -302,7 +303,7 @@ const byId=id=>all().find(a=>a.id===id)||(searchResults||[]).find(a=>a.id===id)|
 
 function poster(a){const up=a.date>TODAY;
   return '<div class="poster" data-id="'+esc(a.id)+'"><div class="pimg" style="'+phBg(a)+'"><span class="ph">'+esc(initials(a.artist))+'</span>'+imgTag(a)
-  +'<span class="badge">'+esc((a.genre||a.kind).toUpperCase())+'</span>'+(up?'<span class="badge red">J-'+daysTo(a.date)+'</span>':a.date>=addDays(TODAY,-7)?'<span class="badge red">NOUVEAU</span>':'')
+  +'<span class="badge">'+esc((a.genre||a.style||a.kind).toUpperCase())+'</span>'+(a.rank&&a.rank<=50&&!up?'<span class="badge red">TOP '+a.rank+'</span>':up?'<span class="badge red">J-'+daysTo(a.date)+'</span>':a.date>=addDays(TODAY,-7)?'<span class="badge red">NOUVEAU</span>':'')
   +'<div class="ov"><a href="'+esc(spotifyQ(a))+'" target="_blank" rel="noopener">Spotify</a><a href="'+esc(appleUrl(a))+'" target="_blank" rel="noopener">Apple</a><a href="'+esc(deezerUrl(a))+'" target="_blank" rel="noopener">Deezer</a></div>'
   +'<button class="fav'+(favs[a.id]?' on':'')+'" data-fav="'+esc(a.id)+'" aria-label="Ajouter à ma liste">♥</button></div>'
   +'<div class="pt" title="'+esc(a.title)+'">'+esc(a.title)+'</div><div class="pa"><span>'+esc(a.artist)+'</span><span class="d">'+dateLabel(a.date)+'</span></div></div>'}
@@ -320,7 +321,10 @@ const bgUrl=a=>a.cover?'url("'+a.cover.replace(/"/g,'')+'")':'none';
 
 function drawHero(){const r=released();
   // à la une : les plus récentes avec pochette, une par artiste
-  const seen=new Set();heroList=r.filter(a=>a.cover&&!a.noCoverOk&&!seen.has(a.artist)&&seen.add(a.artist)).slice(0,6);
+  // à la une : les albums les plus écoutés sortis ces 45 derniers jours, puis les plus récents
+  const recent=addDays(TODAY,-45),seen=new Set();
+  const pool=r.filter(a=>a.rank&&a.date>=recent).sort((a,b)=>a.rank-b.rank).concat(r);
+  heroList=pool.filter(a=>a.cover&&!a.noCoverOk&&!seen.has(a.artist)&&seen.add(a.artist)).slice(0,6);
   if(!heroList.length)heroList=r.slice(0,5);
   if(!heroList.length){$('hero').innerHTML='<div class="htxt"><div class="hbadge"><i></i>CHARGEMENT</div><h1>La musique ne s’arrête jamais.</h1><div class="hartist">Récupération des dernières sorties…</div></div>';return}
   heroIdx%=heroList.length;const a=heroList[heroIdx];
@@ -330,13 +334,17 @@ function drawHero(){const r=released();
 
 function drawTrends(){$('tpills').innerHTML=GENRES.map(g=>'<button class="gp'+(g.key===trendGenre?' active':'')+'" data-tg="'+esc(g.key)+'">'+esc(g.label)+'</button>').join('');
   // tendances = sélection éditoriale Deezer + tops Apple, les plus récents d’abord
-  let l=released().filter(a=>a.source!=='MusicBrainz'&&(trendGenre==='Tous'||a.genre===trendGenre)).slice(0,24);
+  // tendances = albums classés dans les tops Apple Music (meilleur rang d'abord), complétés par les plus récents
+  const g=a=>trendGenre==='Tous'||a.genre===trendGenre;
+  const ranked=released().filter(a=>a.rank&&g(a)).sort((a,b)=>a.rank-b.rank||b.date.localeCompare(a.date));
+  const ids=new Set(ranked.map(a=>a.id));
+  let l=ranked.concat(released().filter(a=>!ids.has(a.id)&&a.source!=='MusicBrainz'&&g(a))).slice(0,24);
   if(!l.length)l=released().filter(a=>trendGenre==='Tous'||a.genre===trendGenre).slice(0,24);
   $('trow').innerHTML=l.length?l.map(poster).join(''):'<div class="empty">Rien dans ce genre pour le moment.</div>'}
 
 function drawAlbums(){const base=searchResults||all();let list=filtered(base);const period=$('period').value,sort=$('sort').value;
   if(!searchResults&&!selected&&period==='all')list=list.filter(a=>a.date<=TODAY);
-  list.sort(sort==='az'?(a,b)=>a.title.localeCompare(b.title):sort==='old'||period==='upcoming'?(a,b)=>a.date.localeCompare(b.date):(a,b)=>b.date.localeCompare(a.date));
+  list.sort(sort==='top'?(a,b)=>(a.rank||999)-(b.rank||999)||b.date.localeCompare(a.date):sort==='az'?(a,b)=>a.title.localeCompare(b.title):sort==='old'||period==='upcoming'?(a,b)=>a.date.localeCompare(b.date):(a,b)=>b.date.localeCompare(a.date));
   $('count').textContent=list.length+' projet(s)'+(searchResults?' · catalogue Apple Music':'');
   $('listTitle').textContent=searchResults?'Résultats pour « '+$('search').value.trim()+' »':selected?'Sorties du '+dateLabel(selected):period==='upcoming'?'Sorties à venir':period==='week'?'Sorties de la semaine':period==='month'?'Sorties du mois':'Toutes les sorties';
   if(!store.size&&!searchResults&&Object.values(status).some(s=>s.state==='load'))return;

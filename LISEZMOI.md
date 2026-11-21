@@ -1,6 +1,6 @@
 # Release Radar — mise en ligne (gratuite, mise à jour automatique)
 
-Le site se met à jour **tout seul 4 fois par jour**, sans crédit et sans abonnement :
+Le site se met à jour **tout seul toutes les 3 heures**, sans crédit et sans abonnement :
 un robot GitHub (GitHub Actions) récupère les vraies sorties sur Deezer, Apple Music et MusicBrainz,
 trouve leurs **vraies pochettes**, puis écrit le fichier `data/releases.json` que le site affiche.
 
@@ -17,7 +17,7 @@ trouve leurs **vraies pochettes**, puis écrit le fichier `data/releases.json` q
 5. **Settings → Pages** → Source : **Deploy from a branch** → branche `main`, dossier `/ (root)` → Save.
 6. Ton site est en ligne à l'adresse `https://TON-PSEUDO.github.io/release-radar/` (1 à 2 minutes après).
 
-Ensuite tu n'as plus rien à faire : le robot tourne seul toutes les 6 heures.
+Ensuite tu n'as plus rien à faire : le robot tourne seul toutes les 3 heures.
 
 ## Bon à savoir
 

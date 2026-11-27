@@ -19,7 +19,7 @@ const GENRES = [
   { key: 'Afro', deezer: 2, match: /afro|african|africa|amapiano|highlife|coupé|ndombolo|bongo|gqom|naija/i },
   { key: 'R&B', deezer: 165, match: /r&b|rnb|soul/i },
   { key: 'Rap', deezer: 116, match: /rap|hip.?hop|drill|trap/i },
-  { key: 'Pop', deezer: 132, match: /pop|vari[ée]t[ée]|chanson|singer\/songwriter|adult contemporary|dance/i },
+  { key: 'Pop', deezer: 132, match: /pop|vari[ée]t[ée]|chanson|singer\/songwriter|adult contemporary/i },
 ];
 const REGIONS = {
   FR: { apple: ['fr'], mb: ['FR'] },
@@ -166,7 +166,7 @@ async function genreCharts() {
         const imgs = e['im:image'] || [];
         const raw = feed === 'topsongs' ? (e['im:collection']?.['im:name']?.label || '') : (e['im:name']?.label || '');
         out.push({ id: 'ap' + (e.id?.attributes?.['im:id'] || i), title: cleanTitle(e['im:name']?.label), artist: e['im:artist']?.label,
-          genre: genreFrom(style), style, date: (e['im:releaseDate']?.label || '').slice(0, 10),
+          genre: genreFrom(style) || { 12: 'Latino', 14: 'Pop', 50000064: 'Pop' }[gid], style, date: (e['im:releaseDate']?.label || '').slice(0, 10),
           kind: feed === 'topsongs' || /- Single$/i.test(raw) ? 'Single' : kindOf(raw),
           cover: big((imgs[imgs.length - 1]?.label || '').replace(/\/\d+x\d+bb\./, '/100x100bb.')), url: e.link?.attributes?.href || e.id?.label,
           source: 'Apple Music', region: Object.keys(REGIONS).find(R => REGIONS[R].apple.includes(cc)) || null, rank: i + 1 });
@@ -194,7 +194,9 @@ async function seeds() {
         if (d < MIN || d > MAX) continue;
         // on garde si le genre iTunes ou le titre/artiste correspond vraiment au style
         if (genreFrom(a.primaryGenreName) !== key && genreFrom(a.collectionName + ' ' + a.artistName) !== key) continue;
-        n++; out.push({ id: 'it' + a.collectionId, title: cleanTitle(a.collectionName), artist: a.artistName, genre: genreFrom(a.primaryGenreName) || key, style: a.primaryGenreName,
+        // si le titre ou l'artiste dit clairement le style (« Kompa », « Zouk »…), il l'emporte sur l'étiquette Apple
+        const byText = genreFrom(a.collectionName + ' ' + a.artistName) === key;
+        n++; out.push({ id: 'it' + a.collectionId, title: cleanTitle(a.collectionName), artist: a.artistName, genre: byText ? key : (genreFrom(a.primaryGenreName) || key), lock: byText ? 1 : undefined, style: a.primaryGenreName,
           date: d, kind: /- Single$/i.test(a.collectionName) || a.trackCount <= 3 ? 'Single' : /- EP$/i.test(a.collectionName) || a.trackCount <= 7 ? 'EP' : 'Album',
           cover: big(a.artworkUrl100), url: a.collectionViewUrl, source: 'Apple Music', region: null });
       }
@@ -224,6 +226,7 @@ function add(list) {
     const k = keyOf(a);
     const old = store.get(k);
     if (!old) { store.set(k, { ...a }); continue; }
+    if (a.lock) { old.genre = a.genre; old.lock = 1; }
     if (!old.genre && a.genre) old.genre = a.genre;
     if (!old.style && a.style) old.style = a.style;
     if (a.rank && (!old.rank || a.rank < old.rank)) { old.rank = a.rank; if (a.region) old.region = a.region; }
@@ -243,7 +246,7 @@ add(await seeds());
 for (const [k, a] of store) {
   const p = previous.get(k);
   if (!p) continue;
-  a.genre ||= p.genre; a.style ||= p.style; a.checked ||= p.checked;
+  a.genre ||= p.genre; a.style ||= p.style; a.checked ||= p.checked; a.lock ||= p.lock;
   if (!a.cover && p.cover) { a.cover = p.cover; a.url = p.url; a.source = p.source; }
 }
 
@@ -267,7 +270,7 @@ let gFound = 0;
 for (const a of noGenre.slice(0, 260)) { const m = await itunesMatch(a); a.checked = 1; if (m?.style) a.style ||= m.style; if (m?.genre) { a.genre = m.genre; gFound++; } }
 // un style connu peut aussi donner le genre (ex. « Zouk » → Kompa)
 // le style indiqué par Apple fait foi (sauf pour garder les morceaux Kompa classés « Variété »)
-for (const a of store.values()) if (a.style) { const g = genreFrom(a.style); if (g && !(a.genre === 'Kompa' && g === 'Pop')) a.genre = g; }
+for (const a of store.values()) if (a.style && !a.lock) { const g = genreFrom(a.style); if (g && !(a.genre === 'Kompa' && g === 'Pop')) a.genre = g; }
 log('Genres trouvés :', gFound);
 
 // on ne publie que les sorties qui ont une vraie pochette

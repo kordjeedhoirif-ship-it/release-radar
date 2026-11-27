@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0a0a0d"><title>Release Radar — Les sorties musicales</title>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0a0a0d"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Release Radar"><title>Release Radar — Les sorties musicales</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0a0a0d;--panel:#141419;--panel2:#1c1c23;--line:#26262f;--muted:#9a99a8;--text:#f5f4fb;--red:#e8213a;--red2:#ff3d55;--gold:#ffc23d}
@@ -71,7 +71,7 @@ select{background:var(--panel2);border:1px solid var(--line);border-radius:30px;
 .grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:22px 14px}
 .empty{grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);border:1px dashed var(--line);border-radius:14px}
 .skel{border-radius:10px;aspect-ratio:.8;background:linear-gradient(90deg,#141419,#1f1f27,#141419);background-size:200% 100%;animation:sh 1.2s infinite}@keyframes sh{to{background-position:-200% 0}}
-.more{display:block;margin:24px auto 0;background:var(--panel2);border:1px solid var(--line);color:#eee;border-radius:30px;padding:11px 24px;cursor:pointer;font-size:13px}.more:hover{border-color:var(--red)}
+.more[hidden]{display:none}.more{display:block;margin:24px auto 0;background:var(--panel2);border:1px solid var(--line);color:#eee;border-radius:30px;padding:11px 24px;cursor:pointer;font-size:13px}.more:hover{border-color:var(--red)}
 /* SPOTLIGHT */
 .spot{position:relative;border-radius:18px;overflow:hidden;min-height:330px;display:flex;align-items:flex-end;border:1px solid var(--line)}
 .spot .hbg{inset:-30px}.spot:after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#0a0a0df0 10%,#0a0a0d55 60%,#0a0a0d22)}
@@ -118,8 +118,8 @@ select{background:var(--panel2);border:1px solid var(--line);border-radius:30px;
 .td{font-size:11px;color:var(--muted)}
 .tnote{color:var(--muted);font-size:11px;margin-top:12px}
 .loading{color:var(--muted);font-size:13px;padding:20px 0}
-.player{position:fixed;left:50%;bottom:16px;transform:translate(-50%,140%);z-index:90;width:min(620px,calc(100% - 24px));background:#17171eee;backdrop-filter:blur(14px);border:1px solid #33333f;border-radius:16px;padding:10px 12px;display:flex;gap:12px;align-items:center;box-shadow:0 18px 50px #000c;transition:transform .3s}
-.player.show{transform:translate(-50%,0)}
+.player{position:fixed;left:50%;bottom:16px;transform:translate(-50%,calc(100% + 140px));visibility:hidden;pointer-events:none;z-index:90;width:min(620px,calc(100% - 24px));background:#17171eee;backdrop-filter:blur(14px);border:1px solid #33333f;border-radius:16px;padding:10px 12px;display:flex;gap:12px;align-items:center;box-shadow:0 18px 50px #000c;transition:transform .3s,visibility .3s}
+.player.show{transform:translate(-50%,0);visibility:visible;pointer-events:auto}
 .pcov{width:46px;height:46px;border-radius:8px;overflow:hidden;flex:none;position:relative;cursor:pointer}.pcov img{width:100%;height:100%;object-fit:cover}
 .pinfo{flex:1;min-width:0}.pinfo b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pinfo small{color:var(--muted);font-size:11px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pbar{height:4px;background:#ffffff1f;border-radius:3px;margin-top:7px;cursor:pointer;position:relative}.pbar i{position:absolute;inset:0 auto 0 0;background:var(--red2);border-radius:3px;width:0}
@@ -128,18 +128,73 @@ select{background:var(--panel2);border:1px solid var(--line);border-radius:30px;
 .ptime{font-size:10px;color:var(--muted);width:34px;text-align:right;flex:none}
 body.playing .shell,body.playing main{padding-bottom:90px}
 @media(max-width:760px){.sheet{padding:0;align-items:flex-end}.sbox{grid-template-columns:1fr;max-height:92vh;border-radius:18px 18px 0 0}.sleft{display:flex;gap:16px;align-items:center;padding:20px 20px 0}.sleft .hcover{width:110px;display:block}.sleft .hbtns{display:none}.sright{padding:10px 18px 24px}.sright h3{font-size:22px}.ptime{display:none}}
+
+/* ================= SMARTPHONE ================= */
+.sbtn,.scancel,.tabbar,.install{display:none}
+.install{margin:10px 0 0}
+.install button{background:var(--red);color:#fff;border:0;border-radius:30px;padding:9px 16px;font-weight:700;font-size:13px;cursor:pointer}
+.ios-tip{position:fixed;left:12px;right:12px;bottom:calc(78px + env(safe-area-inset-bottom));z-index:95;background:#1d1d26;border:1px solid #3a3a48;border-radius:14px;padding:13px 40px 13px 14px;font-size:13px;line-height:1.5;color:#ddd;box-shadow:0 14px 40px #000c}
+.ios-tip b{display:block;color:#fff;margin-bottom:2px}.ios-tip .sh{display:inline-block;border:1px solid #666;border-radius:5px;padding:0 5px;font-size:11px}
+.ios-tip button{position:absolute;top:8px;right:8px;background:none;border:0;color:#aaa;font-size:16px;cursor:pointer}
+@media(hover:none){.fav{opacity:1}.ov{display:none}.poster:hover .pimg{transform:none;box-shadow:none}.poster:active .pimg{transform:scale(.97)}}
+@media(max-width:760px){
+  body{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+  .nav{background:#0a0a0dee;backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
+  .nav .wrap{height:56px;gap:10px}
+  .brand{font-size:16px}.menu{display:none}
+  .nsearch{display:none}.sbtn{display:grid;place-items:center;margin-left:auto;width:38px;height:38px;border-radius:50%;border:1px solid #ffffff22;background:#ffffff10;color:#fff;cursor:pointer}
+  .nav.searching .brand,.nav.searching .fmt,.nav.searching .sbtn{display:none}
+  .nav.searching .nsearch{display:block;flex:1;margin:0}.nav.searching .nsearch input,.nav.searching .nsearch input:focus{width:100%;font-size:16px}
+  .nav.searching .scancel{display:block;background:none;border:0;color:#fff;font-size:14px;cursor:pointer;padding:6px 0}
+  /* bannière : la pochette en fond, texte en bas */
+  .hero{height:auto;min-height:0;padding-top:calc(56px + env(safe-area-inset-top))}
+  .hero .hbg{inset:0;filter:brightness(.62) saturate(1.1);transform:none;background-position:center 30%}
+  .hero:after{background:linear-gradient(0deg,var(--bg) 4%,#0a0a0dc0 38%,#0a0a0d10 75%,#0a0a0d66 100%)}
+  .hin{height:auto;min-height:min(118vw,520px);align-items:flex-end;padding-top:0;padding-bottom:52px}
+  .hero h1{font-size:clamp(28px,8.6vw,40px);letter-spacing:-1px;margin:10px 0 6px}
+  .hartist{font-size:16px;margin-bottom:10px}.hmeta{margin-bottom:16px;gap:6px}.pill{font-size:10px;padding:3px 9px}
+  .hero [data-hx]{display:none}.hbtns{gap:8px}.btn{padding:11px 18px}
+  .hdots{bottom:20px}.hdots button{width:18px}.hdots button.on{width:30px}
+  section.blk{margin:26px 0}
+  .shead{gap:10px;margin-bottom:12px}.shead h2{font-size:19px}.shead .right .arrow{display:none}
+  .pills,.ctrls{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-left:-15px;margin-right:-15px;padding:0 15px;-webkit-overflow-scrolling:touch}
+  .pills::-webkit-scrollbar,.ctrls::-webkit-scrollbar{display:none}
+  .gp,select{flex:none;white-space:nowrap}
+  #trends .shead .pills{order:3;width:calc(100% + 30px)}
+  .row{grid-auto-columns:40%;gap:12px;margin:0 -15px;padding:4px 15px 8px;scroll-padding:0 15px}
+  .grid{gap:18px 12px}
+  .status{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.status::-webkit-scrollbar{display:none}.src,.refresh{flex:none}
+  .spot{min-height:0}.spin{padding:22px 18px}.count div{min-width:52px;padding:7px 9px}.count b{font-size:19px}
+  .day{min-height:42px;font-size:12px}
+  .foot{padding-bottom:20px}
+  .tabbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:70;background:#0e0e13f2;backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+  .tabbar a,.tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:#8d8c9a;text-decoration:none;background:none;border:0;padding:4px 0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .tabbar svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:2}
+  .tabbar .on{color:#fff}.tabbar .on svg{stroke:var(--red2)}
+  .tabbar a[data-tab="maliste"].on svg{fill:var(--red2)}
+  .player{bottom:calc(72px + env(safe-area-inset-bottom));width:calc(100% - 16px);padding:8px 10px;gap:9px}
+  .player .pbtn{width:36px;height:36px}.player .pbtn.main{width:40px;height:40px}
+  .sheet{z-index:100}.sbox{max-height:calc(92vh - env(safe-area-inset-top));padding-bottom:env(safe-area-inset-bottom)}
+  .sbox:before{content:'';position:absolute;top:8px;left:50%;transform:translateX(-50%);width:40px;height:4px;border-radius:3px;background:#ffffff40;z-index:4}
+  .sleft{display:grid;grid-template-columns:118px 1fr;gap:14px;align-items:end;padding:26px 18px 0}
+  .sleft .hcover{width:118px;display:block}.sleft .hbtns{display:flex;flex-direction:column;margin:0}.sleft .btn{justify-content:center}
+  .sright .hbtns .btn{padding:8px 12px;font-size:11px}
+  .trk{padding:10px 8px}
+}
 </style></head><body>
 <nav class="nav" id="nav"><div class="wrap">
   <a class="brand" href="#top">RELEASE<b>RADAR</b></a>
   <div class="fmt" id="fmt" role="tablist" aria-label="Type de sortie"><button role="tab" data-fmt="album" class="on">Albums</button><button role="tab" data-fmt="single">Singles</button></div>
   <div class="menu"><a href="#trends">Tendances</a><a href="#sorties">Sorties</a><a href="#bientot">À venir</a><a href="#calendrier">Calendrier</a><a href="#maliste">Ma liste</a></div>
+  <button class="sbtn" id="sopen" aria-label="Rechercher"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
   <label class="nsearch"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="search" placeholder="Artiste, album…" autocomplete="off"></label>
+  <button class="scancel" id="scancel">Annuler</button>
 </div></nav>
 
 <header class="hero" id="top"><div class="hbg" id="hbg"></div><div class="wrap hin" id="hero"></div><div class="hdots" id="hdots"></div></header>
 
 <main class="wrap">
-  <div class="status" id="status"></div><div class="banner" id="banner"></div>
+  <div class="status" id="status"></div><div class="install" id="install" hidden></div><div class="banner" id="banner"></div>
 
   <section class="blk" id="trends">
     <div class="shead"><h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m3 17 6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Tendances</h2>
@@ -179,6 +234,14 @@ body.playing .shell,body.playing main{padding-bottom:90px}
 
   <footer class="foot"><b>À propos des données</b><br>Nouveautés : sélection éditoriale Deezer par genre. Classements par pays et recherche : Apple Music / iTunes. Sorties à venir et calendrier : MusicBrainz (base collaborative), pochettes Cover Art Archive. Les dates futures sont celles annoncées publiquement et peuvent changer. Données mises en cache 6 h dans ton navigateur.</footer>
 </main>
+<nav class="tabbar" id="tabbar" aria-label="Navigation">
+  <a href="#top" data-tab="top"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Accueil</a>
+  <a href="#sorties" data-tab="sorties"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/></svg>Sorties</a>
+  <button data-tab="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Chercher</button>
+  <a href="#bientot" data-tab="bientot"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>À venir</a>
+  <a href="#maliste" data-tab="maliste"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-9-8.6C1.6 8.4 3.6 5 7 5c2 0 3.4 1.1 5 3 1.6-1.9 3-3 5-3 3.4 0 5.4 3.4 4 6.4-2 4.2-9 8.6-9 8.6z"/></svg>Ma liste</a>
+</nav>
+<div class="ios-tip" id="iostip" hidden><b>Installer Release Radar</b>Touche <span class="sh">⎋</span> Partager, puis « Sur l’écran d’accueil ».<button id="iosclose" aria-label="Fermer">✕</button></div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Fiche de l'album"><div class="sbox" id="sbox"></div></div>
 <div class="player" id="player">
   <div class="pcov" id="pcov"></div>
@@ -359,7 +422,7 @@ function heroHTML(a,spot){const up=a.date>TODAY,fav=favs[a.id];
   +(spot?'<div class="hbadge"><i></i>LA PROCHAINE GROSSE SORTIE</div><h3>'+esc(a.title)+'</h3>':'<h1>'+esc(a.title)+'</h1>')
   +'<div class="hartist">'+esc(a.artist)+'</div><div class="hmeta"><span class="pill">'+esc(a.kind)+'</span>'+(a.genre?'<span class="pill">'+esc(a.genre)+'</span>':'')+'<span class="pill">'+dateLabel(a.date)+'</span><span class="pill">via '+esc(a.source)+'</span></div>'
   +(spot&&up?countHTML(a.date):'')
-  +'<div class="hbtns"><button class="btn red" data-open="'+esc(a.id)+'">▶ '+(up?'Voir le projet':'Écouter les extraits')+'</button><a class="btn ghost" href="'+esc(spotifyQ(a))+'" target="_blank" rel="noopener">Spotify ↗</a><button class="btn ghost'+(fav?' on':'')+'" data-fav="'+esc(a.id)+'">'+(fav?'✓ Dans ma liste':'+ Ma liste')+'</button><a class="btn ghost" href="'+esc(deezerUrl(a))+'" target="_blank" rel="noopener">Deezer ↗</a></div></div>'
+  +'<div class="hbtns"><button class="btn red" data-open="'+esc(a.id)+'">▶ '+(up?'Voir le projet':'Écouter les extraits')+'</button><a class="btn ghost" href="'+esc(spotifyQ(a))+'" target="_blank" rel="noopener" data-hx>Spotify ↗</a><button class="btn ghost'+(fav?' on':'')+'" data-fav="'+esc(a.id)+'">'+(fav?'✓ Dans ma liste':'+ Ma liste')+'</button><a class="btn ghost" href="'+esc(deezerUrl(a))+'" target="_blank" rel="noopener" data-hx>Deezer ↗</a></div></div>'
   +'<div class="hcover" style="'+phBg(a)+'"><span class="ph" style="font-size:60px">'+esc(initials(a.artist))+'</span>'+imgTag(a,true)+'</div>'}
 function countHTML(d){const t=new Date(d+'T00:00:00')-Date.now();const D=Math.max(0,Math.floor(t/864e5)),H=Math.max(0,Math.floor(t/36e5)%24),M=Math.max(0,Math.floor(t/6e4)%60);
   return '<div class="count"><div><b>'+D+'</b><small>JOURS</small></div><div><b>'+H+'</b><small>HEURES</small></div><div><b>'+M+'</b><small>MIN</small></div></div>'}
@@ -520,6 +583,40 @@ $('sheet').addEventListener('click',e=>{
     if(cur&&cur.preview===t[i].preview){audio.paused?audio.play().catch(()=>{}):audio.pause()}else playQueue(sheetAlbum,t,i)}});
 addEventListener('keydown',e=>{if(e.key==='Escape'&&$('sheet').classList.contains('open'))closeSheet();
   if(e.code==='Space'&&queue.length&&!/input|select|textarea/i.test(document.activeElement.tagName)&&document.activeElement.tagName!=='BUTTON'){e.preventDefault();$('pplay').click()}});
+
+
+/* ================= SMARTPHONE : onglets, recherche, installation ================= */
+const nav=$('nav');
+function openSearch(){nav.classList.add('searching');setTimeout(()=>$('search').focus(),50)}
+function closeSearch(){nav.classList.remove('searching');$('search').blur();if($('search').value){$('search').value='';$('search').dispatchEvent(new Event('input'))}}
+$('sopen').onclick=openSearch;$('scancel').onclick=closeSearch;
+$('search').addEventListener('keydown',e=>{if(e.key==='Enter')$('search').blur()});
+$('tabbar').addEventListener('click',e=>{const t=e.target.closest('[data-tab]');if(!t)return;
+  if(t.dataset.tab==='search'){e.preventDefault();openSearch();return}
+  e.preventDefault();const el=t.dataset.tab==='top'?null:$(t.dataset.tab);
+  if(el)scrollTo({top:el.getBoundingClientRect().top+scrollY-64,behavior:'smooth'});else scrollTo({top:0,behavior:'smooth'})});
+// onglet actif selon la section visible
+const tabSecs=['sorties','bientot','maliste'];
+function markTab(){let cur='top';for(const id of tabSecs){const el=$(id);if(el&&el.getBoundingClientRect().top<innerHeight*.45)cur=id}
+  if(nav.classList.contains('searching'))cur='search';
+  $('tabbar').querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('on',x.dataset.tab===cur))}
+addEventListener('scroll',markTab,{passive:true});markTab();
+// glisser vers le bas pour fermer la fiche album
+(()=>{let y0=null;const box=$('sbox');
+  box.addEventListener('touchstart',e=>{y0=box.scrollTop<=0?e.touches[0].clientY:null},{passive:true});
+  box.addEventListener('touchmove',e=>{if(y0===null)return;const d=e.touches[0].clientY-y0;if(d>0)box.style.transform='translateY('+d+'px)'},{passive:true});
+  box.addEventListener('touchend',e=>{if(y0===null)return;const d=(e.changedTouches[0].clientY-y0);box.style.transform='';y0=null;if(d>110)closeSheet()})})();
+// installation sur l'écran d'accueil
+const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+let deferredPrompt=null;
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;if(standalone)return;
+  $('install').hidden=false;$('install').innerHTML='<button id="installbtn">📲 Installer l’appli sur ce téléphone</button>';
+  $('installbtn').onclick=async()=>{deferredPrompt.prompt();await deferredPrompt.userChoice.catch(()=>{});deferredPrompt=null;$('install').hidden=true}});
+const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+const tipSeen=(()=>{try{return localStorage.getItem('rr:iostip')}catch(e){return 1}})();
+if(isIOS&&!standalone&&!tipSeen)setTimeout(()=>{$('iostip').hidden=false},4000);
+$('iosclose').onclick=()=>{$('iostip').hidden=true;try{localStorage.setItem('rr:iostip','1')}catch(e){}};
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 
 boot();
 </script></body></html>

@@ -11,20 +11,22 @@ const UA = 'ReleaseRadar/1.0 (https://github.com/kordjeedhoirif-ship-it/release-
 const PAST_DAYS = 180;   // on garde les sorties des 6 derniers mois
 const FUTURE_DAYS = 120; // et celles annoncées dans les 4 prochains mois
 
+// l'ordre compte : le premier genre reconnu l'emporte (« Pop latino » → Latino, « Latin trap » → Latino)
 const GENRES = [
   { key: null, deezer: 0 },
-  { key: 'Kompa', deezer: null, match: /kompa|konpa|compas|zouk|kizomba|kuduro|semba|tarraxinha|antilles|carib|cara[iï]b|haiti|ghetto zouk|bouyon|dancehall/i },
+  { key: 'Kompa', deezer: null, match: /kompa|konpa|compas|zouk|kizomba|kuduro|semba|tarraxinha|antilles|bouyon/i },
+  { key: 'Latino', deezer: 197, match: /latin|reggaet[oó]n|urban[oa]|dembow|perreo|salsa|bachata|cumbia|merengue|corridos|regional mexican|m[uú]sica mexicana|tropical/i },
   { key: 'Afro', deezer: 2, match: /afro|african|africa|amapiano|highlife|coupé|ndombolo|bongo|gqom|naija/i },
   { key: 'R&B', deezer: 165, match: /r&b|rnb|soul/i },
   { key: 'Rap', deezer: 116, match: /rap|hip.?hop|drill|trap/i },
-  { key: 'Pop', deezer: 132, match: /pop|k-pop|j-pop|dance|singer\/songwriter/i },
-  { key: 'Latino', deezer: 197, match: /latin|reggaeton|urbano/i },
+  { key: 'Pop', deezer: 132, match: /pop|vari[ée]t[ée]|chanson|singer\/songwriter|adult contemporary|dance/i },
 ];
 const REGIONS = {
   FR: { apple: ['fr'], mb: ['FR'] },
   US: { apple: ['us'], mb: ['US'] },
   GB: { apple: ['gb'], mb: ['GB'] },
   AF: { apple: ['ng', 'za', 'ci', 'gh', 'ke'], mb: ['NG', 'ZA', 'GH', 'CI', 'SN', 'CM', 'KE'] },
+  LA: { apple: ['mx', 'co', 'ar', 'cl', 'es'], mb: ['MX', 'CO', 'AR', 'CL', 'ES', 'PR', 'DO'] },
 };
 
 // ---------- outils ----------
@@ -151,11 +153,39 @@ async function itunesMatch(a) {
   } catch { return null; }
 }
 
+// classements Apple par genre (ancien flux RSS iTunes) : Pop, Variété française, Latin
+const GENRE_CHARTS = [['fr', 14], ['fr', 50000064], ['us', 14], ['gb', 14], ['us', 12], ['mx', 12], ['es', 12], ['fr', 12]];
+async function genreCharts() {
+  const out = [];
+  for (const [cc, gid] of GENRE_CHARTS) for (const feed of ['topalbums', 'topsongs']) {
+    try {
+      const r = await getJSON(`https://itunes.apple.com/${cc}/rss/${feed}/limit=100/genre=${gid}/json`, 2);
+      const entries = r.feed?.entry || [];
+      for (const [i, e] of entries.entries()) {
+        const style = e.category?.attributes?.label || e.category?.attributes?.term || null;
+        const imgs = e['im:image'] || [];
+        const raw = feed === 'topsongs' ? (e['im:collection']?.['im:name']?.label || '') : (e['im:name']?.label || '');
+        out.push({ id: 'ap' + (e.id?.attributes?.['im:id'] || i), title: cleanTitle(e['im:name']?.label), artist: e['im:artist']?.label,
+          genre: genreFrom(style), style, date: (e['im:releaseDate']?.label || '').slice(0, 10),
+          kind: feed === 'topsongs' || /- Single$/i.test(raw) ? 'Single' : kindOf(raw),
+          cover: big((imgs[imgs.length - 1]?.label || '').replace(/\/\d+x\d+bb\./, '/100x100bb.')), url: e.link?.attributes?.href || e.id?.label,
+          source: 'Apple Music', region: Object.keys(REGIONS).find(R => REGIONS[R].apple.includes(cc)) || null, rank: i + 1 });
+      }
+      log('Classement genre', gid, cc, feed, entries.length);
+    } catch (e) { log('Classement genre', gid, cc, feed, 'ÉCHEC', e.message); }
+  }
+  return out;
+}
+
 // recherches ciblées pour les styles absents des classements (Kompa, Zouk, Kizomba…)
-const SEEDS = [['Kompa', ['kompa', 'konpa', 'compas haiti', 'zouk', 'zouk love', 'kizomba', 'ghetto zouk', 'kuduro']]];
+const SEEDS = [
+  ['Kompa', ['kompa', 'konpa', 'compas haiti', 'zouk', 'zouk love', 'kizomba', 'ghetto zouk', 'kuduro'], ['fr', 'us', 'pt']],
+  ['Latino', ['reggaeton', 'reggaetón', 'urbano latino', 'perreo', 'dembow', 'latin trap', 'bachata'], ['us', 'mx', 'es']],
+  ['Pop', ['pop française', 'variété française', 'chanson française', 'pop urbaine'], ['fr']],
+];
 async function seeds() {
   const out = [];
-  for (const [key, terms] of SEEDS) for (const term of terms) for (const cc of ['fr', 'us', 'pt']) {
+  for (const [key, terms, ccs] of SEEDS) for (const term of terms) for (const cc of ccs) {
     try {
       const r = await itunes(`https://itunes.apple.com/search?entity=album&limit=100&country=${cc}&term=` + encodeURIComponent(term));
       let n = 0;
@@ -164,8 +194,8 @@ async function seeds() {
         if (d < MIN || d > MAX) continue;
         // on garde si le genre iTunes ou le titre/artiste correspond vraiment au style
         if (genreFrom(a.primaryGenreName) !== key && genreFrom(a.collectionName + ' ' + a.artistName) !== key) continue;
-        n++; out.push({ id: 'it' + a.collectionId, title: a.collectionName, artist: a.artistName, genre: key, style: a.primaryGenreName,
-          date: d, kind: kindOf(a.collectionName + (a.trackCount <= 3 ? ' single' : a.trackCount <= 7 ? ' ep' : '')),
+        n++; out.push({ id: 'it' + a.collectionId, title: cleanTitle(a.collectionName), artist: a.artistName, genre: genreFrom(a.primaryGenreName) || key, style: a.primaryGenreName,
+          date: d, kind: /- Single$/i.test(a.collectionName) || a.trackCount <= 3 ? 'Single' : /- EP$/i.test(a.collectionName) || a.trackCount <= 7 ? 'EP' : 'Album',
           cover: big(a.artworkUrl100), url: a.collectionViewUrl, source: 'Apple Music', region: null });
       }
       log('Recherche', key, '«' + term + '»', cc, n);
@@ -206,6 +236,7 @@ const t0 = Date.now();
 add(await deezer());          // Deezer en premier : genres + pochettes HD
 add(await appleTop());
 add(await musicbrainz());
+add(await genreCharts());
 add(await seeds());
 
 // on récupère ce que les passages précédents avaient déjà trouvé
@@ -235,7 +266,8 @@ log('Genres à trouver :', noGenre.length);
 let gFound = 0;
 for (const a of noGenre.slice(0, 260)) { const m = await itunesMatch(a); a.checked = 1; if (m?.style) a.style ||= m.style; if (m?.genre) { a.genre = m.genre; gFound++; } }
 // un style connu peut aussi donner le genre (ex. « Zouk » → Kompa)
-for (const a of store.values()) if (!a.genre && a.style) a.genre = genreFrom(a.style);
+// le style indiqué par Apple fait foi (sauf pour garder les morceaux Kompa classés « Variété »)
+for (const a of store.values()) if (a.style) { const g = genreFrom(a.style); if (g && !(a.genre === 'Kompa' && g === 'Pop')) a.genre = g; }
 log('Genres trouvés :', gFound);
 
 // on ne publie que les sorties qui ont une vraie pochette

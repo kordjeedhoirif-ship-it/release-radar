@@ -208,7 +208,7 @@ body.playing .shell,body.playing main{padding-bottom:90px}
     <div class="pills" id="genres" style="margin-bottom:12px"></div>
     <div class="ctrls">
       <select id="period"><option value="all">Toutes les dates</option><option value="week">7 derniers jours</option><option value="month">Ce mois-ci</option><option value="upcoming">À venir</option></select>
-      <select id="region"><option value="all">Monde entier</option><option value="FR">France</option><option value="US">USA</option><option value="GB">UK</option><option value="AF">Afrique</option></select>
+      <select id="region"><option value="all">Monde entier</option><option value="FR">France</option><option value="US">USA</option><option value="GB">UK</option><option value="AF">Afrique</option><option value="LA">Espagne & Amérique latine</option></select>
       <select id="sort"><option value="new">Plus récentes</option><option value="top">Les plus écoutées</option><option value="old">Plus anciennes</option><option value="az">A → Z</option></select>
     </div>
     <div class="grid" id="albums"></div><button class="more" id="more" hidden>Afficher plus</button>
@@ -256,16 +256,18 @@ body.playing .shell,body.playing main{padding-bottom:90px}
 /* =====================================================================
    CONFIG
    ===================================================================== */
-const GENRES=[ // id Deezer de la sélection éditoriale + mots-clés pour reconnaître le genre ailleurs
+const GENRES=[ // ordre d'affichage des onglets
   {key:'Tous',label:'Tout',deezer:0},
   {key:'Afro',label:'Afro',deezer:2,match:/afro|african|africa|amapiano|highlife|coupé|ndombolo|bongo|gqom|naija/i},
   {key:'R&B',label:'R&B',deezer:165,match:/r&b|rnb|soul/i},
   {key:'Rap',label:'Rap',deezer:116,match:/rap|hip.?hop|drill|trap/i},
-  {key:'Pop',label:'Pop',deezer:132,match:/pop/i},
-  {key:'Latino',label:'Latino',deezer:197,match:/latin|reggaeton|urbano/i},
-  {key:'Kompa',label:'Kompa · Zouk · Kizomba',deezer:null,match:/kompa|konpa|compas|zouk|kizomba|kuduro|semba|tarraxinha|antilles|carib|cara[iï]b|haiti|bouyon|dancehall/i},
+  {key:'Pop',label:'Pop',deezer:132,match:/pop|vari[ée]t[ée]|chanson|singer\/songwriter|adult contemporary|dance/i},
+  {key:'Latino',label:'Latino · Reggaeton',deezer:197,match:/latin|reggaet[oó]n|urban[oa]|dembow|perreo|salsa|bachata|cumbia|merengue|corridos|regional mexican|m[uú]sica mexicana|tropical/i},
+  {key:'Kompa',label:'Kompa · Zouk · Kizomba',deezer:null,match:/kompa|konpa|compas|zouk|kizomba|kuduro|semba|tarraxinha|antilles|bouyon/i},
 ];
-const REGIONS={FR:{apple:['fr'],mb:['FR']},US:{apple:['us'],mb:['US']},GB:{apple:['gb'],mb:['GB']},AF:{apple:['ng','za'],mb:['NG','ZA','GH','CI','SN','CM','KE']}};
+// ordre de reconnaissance : le premier qui correspond l'emporte
+const GENRE_PRIORITY=['Kompa','Latino','Afro','R&B','Rap','Pop'];
+const REGIONS={FR:{apple:['fr'],mb:['FR']},US:{apple:['us'],mb:['US']},GB:{apple:['gb'],mb:['GB']},AF:{apple:['ng','za'],mb:['NG','ZA','GH','CI','SN','CM','KE']},LA:{apple:['mx','es'],mb:['MX','CO','AR','CL','ES','PR','DO']}};
 const CACHE_TTL=6*3600*1000, PAGE=24;
 
 /* =====================================================================
@@ -281,7 +283,7 @@ const dateLabel=d=>{if(!d)return 'Date inconnue';if(d.length===4)return d;if(d.l
 const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\(.*?\)|\[.*?\]|- ?(deluxe|edition|remaster).*$/g,'').replace(/[^a-z0-9]/g,'');
 const initials=s=>String(s||'?').split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
 const kindOf=t=>{t=String(t||'').toLowerCase();if(t.includes('single'))return 'Single';if(t==='ep'||t.endsWith(' ep')||t.includes('- ep'))return 'EP';return 'Album'};
-const genreFrom=txt=>{for(const g of GENRES)if(g.match&&g.match.test(txt||''))return g.key;return null};
+const genreFrom=txt=>{for(const k of GENRE_PRIORITY){const g=GENRES.find(x=>x.key===k);if(g.match.test(txt||''))return k}return null};
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 const cache={get(k){try{const v=JSON.parse(localStorage.getItem('rr:'+k));if(v&&Date.now()-v.t<CACHE_TTL)return v.d}catch(e){}return null},
